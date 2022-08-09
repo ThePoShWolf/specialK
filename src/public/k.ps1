@@ -1,5 +1,5 @@
 function k {
-    if ($objectCommands.Keys -contains $args[0] -and $args[1] -ne '--help') {
+    if ($objectCommands.Keys -contains $args[0] -and $args[1] -ne '--help' -and $args.Count -eq 2) {
         if ($objectCommands[$args[0]] -contains $args[1]) {
             # select the format type name
             $typeName = "$($args[0])-$($args[1])"
