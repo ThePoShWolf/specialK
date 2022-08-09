@@ -6,6 +6,27 @@ specialK is designed to add PowerShell object functionality to `kubectl` while m
 
 This is so true-to-source that it even works with `kubectl`'s PowerShell auto-completion (you just need to install it with `Add-specialKAutoCompletion`).
 
+## Installation
+
+This module requires `kubectl` to be downloaded and available in the working directory or in the `PATH` variable. You can find directions in the [kubernetes documentation](https://kubernetes.io/docs/tasks/tools/).
+
+The module itself is installed just like any other module:
+
+```powershell
+Install-Module specialK -Repository PSGallery
+```
+
+## Available commands:
+
+The module itself contains 2 commands:
+
+- `k`
+- `Add-specialKAutoCompletion`
+
+`k` is an advanced alias for `kubectl`. For supported command combinations, it will convert the output to a PowerShell object. See [Current Objectified outputs](#current-objectized-outputs) for the full list.
+
+`Add-specialKAutoCompletion` is a simple command that calls `kubectl completion powershell` and replaces `kubectl` with `k` to allow for `kubectl` autocompletion in specialK. specialK does not modify any `kubectl` syntax, so vanilla autocompletion works perfectly.
+
 ## Usage example
 
 A simple listing of the pods
