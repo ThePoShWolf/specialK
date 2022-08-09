@@ -1,10 +1,28 @@
 function k {
     if ($objectCommands.Keys -contains $args[0] -and $args[1] -ne '--help') {
         if ($objectCommands[$args[0]] -contains $args[1]) {
+            # select the format type name
             $typeName = "$($args[0])-$($args[1])"
-            # Convert the output to CSV by replacing multiple spaces with a comma
-            # then add a type name to use the formatter
-            (& kubectl $args) -replace '  +', ',' | ForEach-Object { $_.trim(',') } | ConvertFrom-Csv | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
+
+            # get the output
+            $out = (& kubectl $args)
+
+            # locate all positions to place commas
+            # we are using the headers since some values may be null in the data
+            if ($null -ne $out) {
+                $m = $out[0] | Select-String -Pattern ' \S' -AllMatches
+            }
+
+            # place commas
+            $out = foreach ($line in $out) {
+                foreach ($index in ($m.Matches.Index | Sort-Object -Descending)) {
+                    $line = $line.Insert($index + 1, ',')
+                }
+                $line
+            }
+
+            # convert from csv (since we added commas)
+            $out -replace ' +,', ',' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
             return
         }
     }
