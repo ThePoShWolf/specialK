@@ -10,13 +10,13 @@ function k {
             # locate all positions to place commas
             # we are using the headers since some values may be null in the data
             if ($null -ne $out) {
-                $m = $out[0] | Select-String -Pattern ' \S' -AllMatches
+                $m = $out[0] | Select-String -Pattern '  \S' -AllMatches
             }
 
             # place commas
             $out = foreach ($line in $out) {
                 foreach ($index in ($m.Matches.Index | Sort-Object -Descending)) {
-                    $line = $line.Insert($index + 1, ',')
+                    $line = $line.Insert($index + 2, ',')
                 }
                 $line
             }
