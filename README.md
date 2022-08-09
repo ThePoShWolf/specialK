@@ -1,8 +1,10 @@
 # specialK
 
-This is **NOT** a verb-noun wrapper for `kubectl`.
+This is **NOT** a verb-noun wrapper for `kubectl`. This is a simple, opinionated extension to `kubectl`.
 
-specialK is designed to add PowerShell object functionality to `kubectl` while maintaining original usage and output. For any command combinations that are supported, it converts them to PowerShell objects. For any command combinations not supported, it calls `kubectl` directly. This means that if you are familiar with `kubectl`, then you'll be familiar with specialK. If you learn specialK, then you'll be familiar with `kubectl`. This is so true-to-source that it **works with `kubectl`'s PowerShell auto-completion** (you just have to run `Add-specialKAutoCompletion`).
+specialK is designed to add PowerShell object functionality to `kubectl` while maintaining original syntax and output. For any command combinations that are supported, it calls `kubectl` directly and converts the output to PowerShell objects. For any command combinations not supported, it calls `kubectl` directly. This means that if you are familiar with `kubectl`, then you'll be familiar with specialK. If you learn specialK, then you'll be familiar with `kubectl` (and miss the objectification if you switch back to bash).
+
+This is so true-to-source that it even works with `kubectl`'s PowerShell auto-completion (you just need to install it with `Add-specialKAutoCompletion`).
 
 ## Usage example
 
@@ -33,6 +35,12 @@ k get pods | ?{$_.Name -like 'blah-web*'} | %{kubectl exec $_.Name -- date}
 ```
 
 This commands also demonstrates a current limitation of specialK. Since PowerShell doesn't pass `--` as a parameter, running `k exec pod-name -- command` will skip the `--`. In the future, this will be fully supported and there is no issue switching back to calling plain `kubectl` for this use case.
+
+You can also:
+
+```powershell
+k config get-contexts | ?{$_.name -like '*staging*'} | %{k config use-context $_.name}
+```
 
 ## Current objectized outputs
 
