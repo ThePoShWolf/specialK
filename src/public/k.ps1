@@ -1,6 +1,5 @@
 function k {
-    $objectCommands = @('top', 'get')
-    if ($objectCommands -contains $args[0] -and $args[1] -ne '--help') {
+    if ($objectCommands.Keys -contains $args[0] -and $args[1] -ne '--help') {
         $typeName = "$($args[0])-$($args[1])"
         # Convert the output to CSV by replacing multiple spaces with a comma
         # then add a type name to use the formatter

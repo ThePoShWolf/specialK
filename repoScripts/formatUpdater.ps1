@@ -39,17 +39,8 @@ $tcItem = @"
 <TableColumnItem><PropertyName>{COLUMNITEM}</PropertyName></TableColumnItem>
 "@
 
-$commands = @{
-    get    = @(
-        'pod', 'deployment', 'node'
-    )
-    top    = @(
-        'pod', 'node'
-    )
-    config = @(
-        'get-contexts'
-    )
-}
+$commands = Get-Content $PSScriptRoot\..\src\formats.json | ConvertFrom-Json -AsHashtable
+
 $addViews = foreach ($command in $commands.Keys) {
     foreach ($sub in $commands[$command]) {
         $newView = $view -replace '\{NAME\}', "$command-$sub"

@@ -77,8 +77,12 @@ task ModuleBuild Clean, {
         Copy-Item $test.FullName -Destination $modulePath
     }
 
+    # Copy the formats.json
+    Copy-Item $srcPath\formats.json -Destination $modulePath
+
     # Generate the formats
     Write-Host "Generating format file, this may take a few seconds..."
+    . $srcPath\onload.ps1
     . $srcPath\public\k.ps1
     .\repoScripts\formatUpdater.ps1 -OutPath $modulePath\k.format.ps1xml
 
