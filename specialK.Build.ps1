@@ -77,6 +77,11 @@ task ModuleBuild Clean, {
         Copy-Item $test.FullName -Destination $modulePath
     }
 
+    # Generate the formats
+    Write-Host "Generating format file, this may take a few seconds..."
+    . $srcPath\public\k.ps1
+    .\repoScripts\formatUpdater.ps1 -OutPath $modulePath\k.format.ps1xml
+
     $moduleManifestData = @{
         Path              = "$modulePath\$moduleName.psd1"
         # Only export the public files

@@ -1,3 +1,7 @@
+param (
+    [string]$OutPath
+)
+
 $baseTemplate = @"
 <Configuration>
 	<ViewDefinitions>
@@ -60,4 +64,4 @@ $addViews = foreach ($command in $commands.Keys) {
     }
 }
 
-$baseTemplate -replace [regex]::Escape('<view></view>'), ($addViews -join "`n") | Out-File $PSScriptRoot\..\build\specialK\k.format.ps1xml -Force
+$baseTemplate -replace [regex]::Escape('<view></view>'), ($addViews -join "`n") | Out-File $OutPath -Force
