@@ -1,6 +1,6 @@
 # specialK
 
-This is **NOT** a verb-noun wrapper for `kubectl`. This is a simple, opinionated extension to `kubectl`.
+This is **NOT** a verb-noun wrapper for `kubectl`. This is a simple, opinionated alias to `kubectl`.
 
 specialK is designed to add PowerShell object functionality to `kubectl` while maintaining original syntax and output. For any command combinations that are supported, it calls `kubectl` directly and converts the output to PowerShell objects. For any command combinations not supported, it calls `kubectl` directly. This means that if you are familiar with `kubectl`, then you'll be familiar with specialK. If you learn specialK, then you'll be familiar with `kubectl` (and miss the objectification if you switch back to bash).
 
