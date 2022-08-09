@@ -1,6 +1,6 @@
 # https://kubernetes.io/docs/tasks/tools/included/optional-kubectl-configs-pwsh/
 # but we are going to switch the completer to 'k' from 'kubectl'
-Function Add-specialKArgumentCompleters {
+Function Add-specialKAutoCompletion {
     [cmdletbinding()]
     param (
         [switch]$ToProfile
