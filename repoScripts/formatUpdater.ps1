@@ -42,9 +42,17 @@ $tcItem = @"
 $commands = Get-Content $PSScriptRoot\..\src\formats.json | ConvertFrom-Json -AsHashtable
 
 $addViews = foreach ($command in $commands.Keys) {
+    Write-Host $command
     foreach ($sub in $commands[$command]) {
         $newView = $view -replace '\{NAME\}', "$command-$sub"
-        $props = (k $command $sub)[0].psobject.properties.name
+        Write-Host "- $sub"
+        $out = (k $command $sub)
+        if ($null -ne $out) {
+            $props = $out[0].psobject.properties.name
+        } else {
+            Write-Warning "Unable to generate format for 'kubectl $command $sub'. No objects were returned to examine."
+            break
+        }
         $headers = foreach ($header in $props) {
             $tcHeader -replace '\{HEADER\}', $header
         }

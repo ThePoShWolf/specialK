@@ -2,7 +2,10 @@
     "get": [
         "pod",
         "deployment",
-        "node"
+        "node",
+        "service",
+        "replicationcontroller",
+        "rc"
     ],
     "top": [
         "pod",
