@@ -3,15 +3,15 @@
         "pod",
         "deployment",
         "node",
-        "service",
-        "replicationcontroller",
-        "rc"
+        "service"
     ],
     "top": [
         "pod",
         "node"
     ],
     "config": [
-        "get-contexts"
+        "get-contexts",
+        "get-clusters",
+        "get-users"
     ]
 }
