@@ -72,3 +72,13 @@ These `kubectl` command combinations are currently supported:
 - config: get-contexts, get-clusters, get-users
 
 Do be aware that adding support for additional command combinations is incredibly easy. The formats are all generated at build time using a script, which you can review: [formatUpdater.ps1](repoScripts/formatUpdater.ps1).
+
+# ChangeLog
+
+## 0.1.1
+
+- Minor change to build script to preserve the private data on build (Tags, ProjectUri, LicenseUri)
+
+## 0.1.0
+
+Initial release
