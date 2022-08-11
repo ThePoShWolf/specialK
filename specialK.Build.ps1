@@ -96,12 +96,16 @@ task ModuleBuild Clean, {
         .\repoScripts\formatUpdater.ps1 -OutPath $modulePath\k.format.ps1xml
     }
 
-    $moduleManifestData = @{
-        Path              = "$modulePath\$moduleName.psd1"
-        # Only export the public files
-        FunctionsToExport = ($moduleScriptFiles | Where-Object { $_.FullName -match "(\\|\/)public(\\|\/)[^\.]+\.ps1$" }).basename
-        ModuleVersion     = $version
+    # Get existing manifest data
+    $moduleManifestData = Invoke-Command -ScriptBlock ([scriptblock]::create((Get-Content $modulePath\$moduleName.psd1 -Raw))) -NoNewScope
+    foreach ($key in $moduleManifestData['PrivateData']['PSData'].Keys) {
+        $moduleManifestData[$key] = $moduleManifestData['PrivateData']['PSData'][$key]
     }
+
+    # update
+    $moduleManifestData['Path'] = "$modulePath\$moduleName.psd1"
+    $moduleManifestData['FunctionsToExport'] = ($moduleScriptFiles | Where-Object { $_.FullName -match "(\\|\/)public(\\|\/)[^\.]+\.ps1$" }).basename
+    $ModuleManifestData['ModuleVersion'] = $version
     if ($null -ne $PreRelease) {
         $moduleManifestData['Prerelease'] = $PreRelease
     }
