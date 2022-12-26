@@ -75,6 +75,10 @@ Do be aware that adding support for additional command combinations is incredibl
 
 # ChangeLog
 
+## 0.2
+
+- Now internally uses `;` as the delimiter to generate the objects, improving output for services with multiple ports.
+
 ## 0.1.1
 
 - Minor change to build script to preserve the private data on build (Tags, ProjectUri, LicenseUri)
