@@ -13,16 +13,16 @@ function k {
                 $m = $out[0] | Select-String -Pattern '  \S' -AllMatches
             }
 
-            # place commas
+            # place semicolons
             $out = foreach ($line in $out) {
                 foreach ($index in ($m.Matches.Index | Sort-Object -Descending)) {
-                    $line = $line.Insert($index + 2, ',')
+                    $line = $line.Insert($index + 2, ';')
                 }
                 $line
             }
 
             # convert from csv (since we added commas)
-            $out -replace ' +,', ',' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
+            $out -replace ' +,', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';' | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
             return
         }
     }
