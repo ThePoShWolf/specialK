@@ -2,50 +2,15 @@ param (
     [string]$OutPath
 )
 
-$baseTemplate = @"
-<Configuration>
-	<ViewDefinitions>
-		<view></view>
-	</ViewDefinitions>
-</Configuration>
-"@
-
-$view = @"
-        <View>
-            <Name>{NAME}</Name>
-            <ViewSelectedBy>
-                <TypeName>{NAME}</TypeName>
-            </ViewSelectedBy>
-            <TableControl>
-                <TableHeaders>
-{HEADER}
-                </TableHeaders>
-                <TableRowEntries>
-                    <TableRowEntry>
-                        <TableColumnItems>
-{COLUMNITEM}
-                        </TableColumnItems>
-                    </TableRowEntry>
-                </TableRowEntries>
-            </TableControl>
-        </View>
-"@
-
-$tcHeader = @"
-<TableColumnHeader><Label>{HEADER}</Label></TableColumnHeader>
-"@
-
-$tcItem = @"
-<TableColumnItem><PropertyName>{COLUMNITEM}</PropertyName></TableColumnItem>
-"@
-
 $commands = Get-Content $PSScriptRoot\..\src\formats.json | ConvertFrom-Json -AsHashtable
 
+# Creating the views
 $addViews = foreach ($command in $commands.Keys) {
     Write-Host $command
+    # Foreach command in the formats.json
     foreach ($sub in $commands[$command]) {
-        $newView = $view -replace '\{NAME\}', "$command-$sub"
         Write-Host "- $sub"
+        # get the output of the command and subcommand
         $out = (k $command $sub)
         if ($null -ne $out) {
             $props = $out[0].psobject.properties.name
@@ -53,14 +18,39 @@ $addViews = foreach ($command in $commands.Keys) {
             Write-Warning "Unable to generate format for 'kubectl $command $sub'. No objects were returned to examine."
             break
         }
-        $headers = foreach ($header in $props) {
-            $tcHeader -replace '\{HEADER\}', $header
+
+        # create the view
+        '        <View>'
+        '            <Name>{0}</Name>' -f "$command-$sub"
+        '            <ViewSelectedBy>'
+        '                <TypeName>{0}</TypeName>' -f "$command-$sub"
+        '            </ViewSelectedBy>'
+        '            <TableControl>'
+        '                <TableHeaders>'
+        # create the headers
+        foreach ($header in $props) {
+            '                    <TableColumnHeader><Label>{0}</Label></TableColumnHeader>' -f $header
         }
-        $tcItems = foreach ($tci in $props) {
-            $tcItem -replace '\{COLUMNITEM\}', $tci
+        '                </TableHeaders>'
+        '                <TableRowEntries>'
+        '                    <TableRowEntry>'
+        '                        <TableColumnItems>'
+        # create the column items
+        foreach ($tci in $props) {
+            '                            <TableColumnItem><PropertyName>{0}</PropertyName></TableColumnItem>' -f $tci
         }
-        $newView -replace '\{HEADER\}', ($headers -join "`n") -replace '\{COLUMNITEM\}', ($tcItems -join "`n")
+        '                        </TableColumnItems>'
+        '                    </TableRowEntry>'
+        '                </TableRowEntries>'
+        '            </TableControl>'
+        '        </View>'
     }
 }
 
-$baseTemplate -replace [regex]::Escape('<view></view>'), ($addViews -join "`n") | Out-File $OutPath -Force
+@(
+    '<Configuration>'
+    '    <ViewDefinitions>'
+    $addViews
+    '    </ViewDefinitions>'
+    '</Configuration>'
+) | Out-File $OutPath -Force
