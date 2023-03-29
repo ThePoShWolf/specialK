@@ -7,7 +7,7 @@ function k {
             # get the output
             $out = (& kubectl $args)
 
-            # locate all positions to place commas
+            # locate all positions to place semicolons
             # we are using the headers since some values may be null in the data
             if ($null -ne $out) {
                 $m = $out[0] | Select-String -Pattern '  \S' -AllMatches
@@ -21,7 +21,7 @@ function k {
                 $line
             }
 
-            # convert from csv (since we added commas)
+            # convert from csv (since we added semicolons)
             $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';' | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
             return
         }
