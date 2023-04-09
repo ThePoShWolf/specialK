@@ -7,7 +7,7 @@ function k {
     } else {
         $out = (& kubectl $args)
         if ($out[0] -match '^(NAME|CURRENT)') {
-            # locate all positions to place commas
+            # locate all positions to place semicolons
             # we are using the headers since some values may be null in the data
             if ($null -ne $out) {
                 $m = $out[0] | Select-String -Pattern '  \S' -AllMatches
