@@ -6,6 +6,7 @@ function k {
         & kubectl $args
     } else {
         $out = (& kubectl $args)
+        # if the output starts with the typical headers
         if ($out[0] -match '^(NAME|CURRENT)') {
             # locate all positions to place semicolons
             # we are using the headers since some values may be null in the data
