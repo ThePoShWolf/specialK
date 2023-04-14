@@ -3,7 +3,8 @@
         "pod",
         "deployment",
         "node",
-        "service"
+        "service",
+        "events"
     ],
     "top": [
         "pod",
