@@ -111,6 +111,8 @@ This is something that could be improved, so feel free to submit a PR that impro
 - Improved parameter handling
 - Improved parsing decision logic
 - Added `get events` to objectized output
+- Added `get namespace` to objectized output (#5, thanks [@Relinator](https://github.com/Relinator))
+- Added support for plural subcommands on the get command (#2, thanks [@Relinator](https://github.com/Relinator))
 
 ### 0.2.1
 
