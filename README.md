@@ -6,6 +6,14 @@ specialK is designed to add PowerShell object functionality to `kubectl` while m
 
 This is so true-to-source that it even works with `kubectl`'s PowerShell auto-completion (you just need to install it with `Add-specialKAutoCompletion`).
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Available Commands](#available-commands)
+- [Usage Example](#usage-example)
+- [Current Objectized Outputs](#current-objectized-outputs)
+- [ChangeLog](#changelog)
+
 ## Installation
 
 This module requires `kubectl` to be downloaded and available in the working directory or in the `PATH` variable. You can find directions in the [kubernetes documentation](https://kubernetes.io/docs/tasks/tools/).
@@ -73,20 +81,20 @@ These `kubectl` command combinations are currently supported:
 
 Do be aware that adding support for additional command combinations is incredibly easy. The formats are all generated at build time using a script, which you can review: [formatUpdater.ps1](repoScripts/formatUpdater.ps1).
 
-# ChangeLog
+## ChangeLog
 
-## 0.2.1
+### 0.2.1
 
 - Fixed issue from the switch to semicolons.
 
-## 0.2
+### 0.2
 
 - Now internally uses `;` as the delimiter to generate the objects, improving output for services with multiple ports.
 
-## 0.1.1
+### 0.1.1
 
 - Minor change to build script to preserve the private data on build (Tags, ProjectUri, LicenseUri)
 
-## 0.1.0
+### 0.1.0
 
 Initial release
