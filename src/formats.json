@@ -2,8 +2,10 @@
     "get": [
         "pod",
         "deployment",
+        "namespace",
         "node",
-        "service"
+        "service",
+        "events"
     ],
     "top": [
         "pod",

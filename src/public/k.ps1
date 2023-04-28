@@ -1,12 +1,13 @@
 function k {
-    if ($objectCommands.Keys -contains $args[0] -and $args[1] -ne '--help' -and $args.Count -eq 2) {
-        if ($objectCommands[$args[0]] -contains $args[1]) {
-            # select the format type name
-            $typeName = "$($args[0])-$($args[1])"
-
-            # get the output
-            $out = (& kubectl $args)
-
+    $skipArgs = @(
+        'exec', 'cp', 'scale', 'rollout', 'delete', 'logs'
+    )
+    if ($skipArgs -contains $args[0]) {
+        & kubectl $args
+    } else {
+        $out = (& kubectl $args)
+        # if the output starts with the typical headers
+        if ($out -and ($out[0] -match '^(NAME |NAMESPACE |CURRENT |LAST SEEN )') ) {
             # locate all positions to place semicolons
             # we are using the headers since some values may be null in the data
             if ($null -ne $out) {
@@ -20,11 +21,17 @@ function k {
                 }
                 $line
             }
-
-            # convert from csv (since we added semicolons)
-            $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';' | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
-            return
+            $pluralCheck = $args[1]
+            if ( $args[0] -eq 'get' ) { $pluralCheck = $pluralCheck -replace '(.*)s$', '$1' }
+            if ($objectCommands[$args[0]] -contains $pluralCheck) {
+                # select the format type name
+                $typeName = "$($args[0])-$($pluralCheck)"
+                $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';' | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
+            } else {
+                $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';'
+            }
+        } else {
+            $out
         }
     }
-    & kubectl $args
 }
