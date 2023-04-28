@@ -7,7 +7,7 @@ function k {
     } else {
         $out = (& kubectl $args)
         # if the output starts with the typical headers
-        if ($out[0] -match '^(NAME|CURRENT |LAST SEEN )') {
+        if ($out[0] -match '^(NAME |NAMESPACE |CURRENT |LAST SEEN )') {
             # locate all positions to place semicolons
             # we are using the headers since some values may be null in the data
             if ($null -ne $out) {
