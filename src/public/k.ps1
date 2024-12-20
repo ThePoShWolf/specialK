@@ -8,7 +8,28 @@ function k {
         $out = (& kubectl $args)
         # if the output starts with the typical headers
         if ($out -and ($out[0] -match '^(NAME |NAMESPACE |CURRENT |LAST SEEN )') ) {
+            # check for namespace
             $namespace = $out[0] -match '^NAMESPACE'
+
+            # check for output wide
+            $checkArgs = $args[2..$args.count]
+            $wide = if ($checkArgs -contains '-o') {
+                if ($checkArgs[$checkArgs.IndexOf('-o') + 1] -eq 'wide') {
+                    $true
+                } else {
+                    $false
+                }
+            } elseif ($checkArgs -contains '--output') {
+                if ($checkArgs[$checkArgs.IndexOf('--output') + 1] -eq 'wide') {
+                    $true
+                } else {
+                    $false
+                }
+            } elseif ($checkArgs -contains '--output=wide') {
+                $true
+            } else {
+                $false
+            }
 
             # locate all positions to place semicolons
             # we are using the headers since some values may be null in the data
@@ -31,6 +52,9 @@ function k {
                     $typeName = "$($args[0])-$($pluralCheck)-ns"
                 } else {
                     $typeName = "$($args[0])-$($pluralCheck)"
+                }
+                if ($wide) {
+                    $typeName = "$typeName-wide"
                 }
                 $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';' | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
             } else {
