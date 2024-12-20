@@ -2,6 +2,40 @@ param (
     [string]$OutPath
 )
 
+Write-Host $OutPath
+
+Function New-FormatView {
+    param(
+        [string]$name,
+        [string[]]$props
+    )
+    # create the view
+    '        <View>'
+    '            <Name>{0}</Name>' -f "$name"
+    '            <ViewSelectedBy>'
+    '                <TypeName>{0}</TypeName>' -f "$name"
+    '            </ViewSelectedBy>'
+    '            <TableControl>'
+    '                <TableHeaders>'
+    # create the headers
+    foreach ($header in $props) {
+        '                    <TableColumnHeader><Label>{0}</Label></TableColumnHeader>' -f $header
+    }
+    '                </TableHeaders>'
+    '                <TableRowEntries>'
+    '                    <TableRowEntry>'
+    '                        <TableColumnItems>'
+    # create the column items
+    foreach ($tci in $props) {
+        '                            <TableColumnItem><PropertyName>{0}</PropertyName></TableColumnItem>' -f $tci
+    }
+    '                        </TableColumnItems>'
+    '                    </TableRowEntry>'
+    '                </TableRowEntries>'
+    '            </TableControl>'
+    '        </View>'
+}
+
 $commands = Get-Content $PSScriptRoot\..\src\formats.json | ConvertFrom-Json -AsHashtable
 
 # Creating the views
@@ -19,31 +53,13 @@ $addViews = foreach ($command in $commands.Keys) {
             break
         }
 
-        # create the view
-        '        <View>'
-        '            <Name>{0}</Name>' -f "$command-$sub"
-        '            <ViewSelectedBy>'
-        '                <TypeName>{0}</TypeName>' -f "$command-$sub"
-        '            </ViewSelectedBy>'
-        '            <TableControl>'
-        '                <TableHeaders>'
-        # create the headers
-        foreach ($header in $props) {
-            '                    <TableColumnHeader><Label>{0}</Label></TableColumnHeader>' -f $header
-        }
-        '                </TableHeaders>'
-        '                <TableRowEntries>'
-        '                    <TableRowEntry>'
-        '                        <TableColumnItems>'
-        # create the column items
-        foreach ($tci in $props) {
-            '                            <TableColumnItem><PropertyName>{0}</PropertyName></TableColumnItem>' -f $tci
-        }
-        '                        </TableColumnItems>'
-        '                    </TableRowEntry>'
-        '                </TableRowEntries>'
-        '            </TableControl>'
-        '        </View>'
+        $name = "$command-$sub"
+
+        # generate plain format:
+        New-FormatView -name $name -props $props
+
+        # generate format with namespace:
+        New-FormatView -name "$name-ns" -props ($props + 'NAMESPACE')
     }
 }
 
@@ -53,4 +69,4 @@ $addViews = foreach ($command in $commands.Keys) {
     $addViews
     '    </ViewDefinitions>'
     '</Configuration>'
-) | Out-File $OutPath -Force
+) | Out-File $OutPath -Force -Encoding utf8
