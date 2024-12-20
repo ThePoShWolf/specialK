@@ -60,6 +60,22 @@ $addViews = foreach ($command in $commands.Keys) {
 
         # generate format with namespace:
         New-FormatView -name "$name-ns" -props ($props + 'NAMESPACE')
+
+        Write-Host "  - wide"
+        # get the output of the command and subcommand
+        $out = (k $command $sub '-o' 'wide')
+        if ($null -ne $out) {
+            $props = $out[0].psobject.properties.name
+        } else {
+            Write-Warning "Unable to generate format for 'kubectl $command $sub -o wide'. No objects were returned to examine."
+            break
+        }
+
+        # generate plain format with wide:
+        New-FormatView -name "$name-wide" -props ($props)
+
+        # generate formate with namespace and wide:
+        New-FormatView -name "$name-ns-wide" -props ($props + 'NAMESPACE')
     }
 }
 
