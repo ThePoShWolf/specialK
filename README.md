@@ -76,7 +76,7 @@ k config get-contexts | ?{$_.name -like '*staging*'} | %{k config use-context $_
 
 These `kubectl` command combinations are currently supported:
 
-- get: pod, deployment, node, service, events
+- get: pod, deployment, node, service, events, namespace
 - top: pod, node
 - config: get-contexts, get-clusters, get-users
 
@@ -105,6 +105,11 @@ Invoke-Build -Task modulebuild -ReuseFormats
 This is something that could be improved, so feel free to submit a PR that improves this process.
 
 ## ChangeLog
+
+### 0.4.0
+
+- Added support for `-o wide`
+- Added support for `--all-namespaces`
 
 ### 0.3.0
 
