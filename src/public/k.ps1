@@ -13,7 +13,23 @@ function k {
 
             # check for output wide
             $checkArgs = $args[2..$args.count]
-            $wide = (($checkArgs -contains '-o' -or $checkArgs -contains '--output') -and $checkArgs -contains 'wide') -or ($checkArgs -contains '--output=wide')
+            $wide = if ($checkArgs -contains '-o') {
+                if ($checkArgs[$checkArgs.IndexOf('-o') + 1] -eq 'wide') {
+                    $true
+                } else {
+                    $false
+                }
+            } elseif ($checkArgs -contains '--output') {
+                if ($checkArgs[$checkArgs.IndexOf('--output') + 1] -eq 'wide') {
+                    $true
+                } else {
+                    $false
+                }
+            } elseif ($checkArgs -contains '--output=wide') {
+                $true
+            } else {
+                $false
+            }
 
             # locate all positions to place semicolons
             # we are using the headers since some values may be null in the data
