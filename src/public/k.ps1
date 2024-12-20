@@ -8,6 +8,13 @@ function k {
         $out = (& kubectl $args)
         # if the output starts with the typical headers
         if ($out -and ($out[0] -match '^(NAME |NAMESPACE |CURRENT |LAST SEEN )') ) {
+            $namespace = if ($out[0] -match '^NAME ') {
+                'name'
+            } elseif ($out[0] -match '^NAMESPACE') {
+                'namespace'
+            } else {
+                'none'
+            }
             # locate all positions to place semicolons
             # we are using the headers since some values may be null in the data
             if ($null -ne $out) {
@@ -25,7 +32,13 @@ function k {
             if ( $args[0] -eq 'get' ) { $pluralCheck = $pluralCheck -replace '(.*)s$', '$1' }
             if ($objectCommands[$args[0]] -contains $pluralCheck) {
                 # select the format type name
-                $typeName = "$($args[0])-$($pluralCheck)"
+                if ($namespace -eq 'name') {
+                    $typeName = "$($args[0])-$($pluralCheck)-name"
+                } elseif ($namespace -eq 'namespace') {
+                    $typeName = "$($args[0])-$($pluralCheck)-ns"
+                } else {
+                    $typeName = "$($args[0])-$($pluralCheck)"
+                }
                 $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';' | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
             } else {
                 $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';'
