@@ -8,8 +8,12 @@ function k {
         $out = (& kubectl $args)
         # if the output starts with the typical headers
         if ($out -and ($out[0] -match '^(NAME |NAMESPACE |CURRENT |LAST SEEN )') ) {
+            # check for namespace
             $namespace = $out[0] -match '^NAMESPACE'
-            $wide = $args -contains '-o' -and $args -contains 'wide'
+
+            # check for output wide
+            $checkArgs = $args[2..$args.count]
+            $wide = (($checkArgs -contains '-o' -or $checkArgs -contains '--output') -and $checkArgs -contains 'wide') -or ($checkArgs -contains '--output=wide')
 
             # locate all positions to place semicolons
             # we are using the headers since some values may be null in the data
