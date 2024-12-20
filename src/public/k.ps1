@@ -11,24 +11,22 @@ function k {
             # check for namespace
             $namespace = $out[0] -match '^NAMESPACE'
 
-            # check for output wide
+            # check for output
             $checkArgs = $args[2..$args.count]
-            $wide = if ($checkArgs -contains '-o') {
-                if ($checkArgs[$checkArgs.IndexOf('-o') + 1] -eq 'wide') {
-                    $true
-                } else {
-                    $false
+            foreach ($arg in $checkArgs) {
+                if ($arg -match '^--output=?(?<type>.*)?') {
+                    $outputType = if ($Matches.type.length -gt 0) {
+                        $Matches.type
+                    } else {
+                        $checkArgs[$checkArgs.IndexOf($arg) + 1]
+                    }
+                } elseif ($arg -match '^-o=?(?<type>.*)?') {
+                    $outputType = if ($Matches.type.length -gt 0) {
+                        $Matches.type
+                    } else {
+                        $checkArgs[$checkArgs.IndexOf($arg) + 1]
+                    }
                 }
-            } elseif ($checkArgs -contains '--output') {
-                if ($checkArgs[$checkArgs.IndexOf('--output') + 1] -eq 'wide') {
-                    $true
-                } else {
-                    $false
-                }
-            } elseif ($checkArgs -contains '--output=wide') {
-                $true
-            } else {
-                $false
             }
 
             # locate all positions to place semicolons
@@ -53,7 +51,7 @@ function k {
                 } else {
                     $typeName = "$($args[0])-$($pluralCheck)"
                 }
-                if ($wide) {
+                if ($outputType -eq 'wide') {
                     $typeName = "$typeName-wide"
                 }
                 $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';' | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
