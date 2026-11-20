@@ -12,6 +12,11 @@ Releases are tagged `vMAJOR.MINOR.PATCH`. The version lives in `src/specialK.psd
 - CI: lint (PSScriptAnalyzer), unit tests on Linux and Windows, smoke test against kind on three Kubernetes versions
 - Preview builds (`0.5.0-previewNNNN`) publish to the Gallery from `dev`; merging to `main` publishes the release, tags it and creates the GitHub Release
 - Manifest cleanup: explicit exports, `CompatiblePSEditions`, broader tags, release notes link
+- Typed columns (RESTARTS, AGE, LAST SEEN, READY, CPU, MEMORY and others) sort and filter by value but print exactly as kubectl does
+- `k get` objectifies ingress, configmap, secret (names, types and counts only), persistentvolumeclaim, job and statefulset
+- Completion setup with `-ToProfile` is idempotent and supports `-WhatIf`
+- Import warns when an alias `k` hides the `k` function
+- Devcontainer trimmed and given Docker-in-Docker and kind for a local cluster
 - TODO (Anthony): reword
 
 ## Earlier releases
