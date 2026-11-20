@@ -179,7 +179,8 @@ Describe 'k against a real cluster' -Tag 'Smoke' {
         }
 
         It 'every sample pod is Running and Ready' {
-            $pods = @(k get pod -n $script:ns)
+            # the job's and statefulset's pods live here too; this checks the deployment's
+            $pods = @(k get pod -n $script:ns | Where-Object NAME -like 'smoke-web-*')
             $pods.Count | Should -Be 2
             $pods | ForEach-Object {
                 $_.STATUS | Should -Be 'Running'
@@ -225,7 +226,8 @@ Describe 'k against a real cluster' -Tag 'Smoke' {
             (k get deployment -n $script:ns).NAME | Should -Contain 'smoke-web'
             (k get service -n $script:ns).NAME | Should -Contain 'smoke-web'
             (k get namespace).NAME | Should -Contain $script:ns
-            (k get pod -A | Where-Object NAMESPACE -eq $script:ns).Count | Should -Be 2
+            # the namespace also holds the sample job's and statefulset's pods; count the deployment's only
+            @(k get pod -A | Where-Object { $_.NAMESPACE -eq $script:ns -and $_.NAME -like 'smoke-web-*' }).Count | Should -Be 2
         }
 
         It 'k <Command> returns <Type> objects (needs the Metrics API)' -ForEach $script:topCases {
