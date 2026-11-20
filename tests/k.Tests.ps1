@@ -297,6 +297,25 @@ Describe 'k, offline' {
             (k get $Form)[0].PSObject.TypeNames[0] | Should -Be $TypeName
         }
 
+        It 'several type/name arguments of one resource still convert: <Forms>' -ForEach @(
+            @{ Forms = @('pod/web-x', 'pod/web-y'); Fixture = 'get-pod' }
+            @{ Forms = @('pod/web-x', 'po/web-y'); Fixture = 'get-pod' }
+        ) {
+            Set-FakeKubectl -Arguments (@('get') + $Forms) -Fixture $Fixture
+            (k get @Forms)[0].PSObject.TypeNames[0] | Should -Be 'get-pod'
+        }
+
+        It 'mixed type/name arguments pass through as raw kubectl lines: <Forms>' -ForEach @(
+            @{ Forms = @('pod/web-x', 'service/web') }
+            @{ Forms = @('service/web', 'svc/web', 'deploy/web') }
+            @{ Forms = @('pod', 'web-x', 'service/web') }
+        ) {
+            Set-FakeKubectl -Arguments (@('get') + $Forms) -Fixture 'get-service'
+            $result = @(k get @Forms)
+            $result[0] | Should -BeOfType [string]
+            $result[0] | Should -Match '^NAME'
+        }
+
         It 'config <Resource> is converted to objects with type config-<Resource>' -ForEach @(
             @{ Resource = 'get-clusters' }
             @{ Resource = 'get-users' }

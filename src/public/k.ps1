@@ -7,6 +7,12 @@ function k {
     $resource = $null
     if ($info.Verb) {
         $resource = ConvertTo-KubectlResourceName -Name ($info.Positionals | Select-Object -First 1)
+        # `get pod/web service/web` mixes tables with different columns: convert only when every type/name
+        # argument is the same resource, otherwise hand the call to kubectl untouched
+        $resources = @($info.Positionals | Where-Object { $_.Contains('/') } | ForEach-Object { ConvertTo-KubectlResourceName -Name $_ } | Select-Object -Unique)
+        if ($resources.Count -gt 1 -or ($resources.Count -eq 1 -and $resources[0] -ne $resource)) {
+            $resource = $null
+        }
     }
     $convert = $resource -and
         ($objectCommands[$info.Verb] -contains $resource) -and
