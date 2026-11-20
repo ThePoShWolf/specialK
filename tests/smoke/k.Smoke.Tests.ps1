@@ -279,15 +279,17 @@ Describe 'k against a real cluster' -Tag 'Smoke' {
 
     Context 'errors' {
         It 'a failing command writes a PowerShell error and keeps a non-zero exit code' {
-            $previous = $ErrorActionPreference
+            # set globally: the module only sees the global preference, and the
+            # GitHub Actions pwsh shell starts every step with it set to Stop
+            $previous = $global:ErrorActionPreference
             try {
-                $ErrorActionPreference = 'SilentlyContinue'
+                $global:ErrorActionPreference = 'SilentlyContinue'
                 $Error.Clear()
                 $null = k get nosuchthing
                 $errorCount = $Error.Count
                 $exitCode = $LASTEXITCODE
             } finally {
-                $ErrorActionPreference = $previous
+                $global:ErrorActionPreference = $previous
             }
             $exitCode | Should -Not -Be 0
             $errorCount | Should -BeGreaterThan 0
