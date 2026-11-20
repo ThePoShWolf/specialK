@@ -2,7 +2,9 @@ param (
     [version]$Version = '0.0.1',
     [string]$NugetApiKey,
     [string]$PreRelease,
-    [switch]$ReuseFormats
+    [switch]$ReuseFormats,
+    # Pester tags to leave out of the Test task, e.g. -ExcludeTag KnownBug
+    [string[]]$ExcludeTag
 )
 $srcPath = "$PSScriptRoot\src"
 $buildPath = "$PSScriptRoot\build"
@@ -112,11 +114,18 @@ task ModuleBuild Clean, {
     Update-ModuleManifest @moduleManifestData
 }
 
-task Test ModuleBuild, {
-    Write-Host "Importing module."
-    Import-Module $modulePath -RequiredVersion $version
-    Write-Host "Invoking tests."
-    Invoke-Pester $testPath -Verbose
+# Run the offline Pester suite (tests/). It needs no cluster, no network and no build; it loads src/ itself.
+#   Invoke-Build Test                      everything; the KnownBug tests currently fail on purpose
+#   Invoke-Build Test -ExcludeTag KnownBug only what is expected to pass today
+task Test {
+    $config = New-PesterConfiguration
+    $config.Run.Path = Join-Path $PSScriptRoot 'tests'
+    $config.Run.Throw = $true
+    $config.Output.Verbosity = 'Normal'
+    if ($ExcludeTag) {
+        $config.Filter.ExcludeTag = $ExcludeTag
+    }
+    Invoke-Pester -Configuration $config
 }
 
 task Publish Test, DocBuild, {
@@ -125,4 +134,4 @@ task Publish Test, DocBuild, {
     }
 }
 
-task All ModuleBuild, Publish
+task All ModuleBuild, Publish
