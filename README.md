@@ -107,31 +107,4 @@ This is something that could be improved, so feel free to submit a PR that impro
 
 ## ChangeLog
 
-### 0.4.0
-
-- Added support for `-o wide`
-- Added support for `--all-namespaces`
-
-### 0.3.0
-
-- Improved parameter handling
-- Improved parsing decision logic
-- Added `get events` to objectized output
-- Added `get namespace` to objectized output (#5, thanks [@Relinator](https://github.com/Relinator))
-- Added support for plural subcommands on the get command (#2, thanks [@Relinator](https://github.com/Relinator))
-
-### 0.2.1
-
-- Fixed issue from the switch to semicolons.
-
-### 0.2
-
-- Now internally uses `;` as the delimiter to generate the objects, improving output for services with multiple ports.
-
-### 0.1.1
-
-- Minor change to build script to preserve the private data on build (Tags, ProjectUri, LicenseUri)
-
-### 0.1.0
-
-Initial release
+See [CHANGELOG.md](CHANGELOG.md).
