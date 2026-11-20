@@ -142,7 +142,9 @@ Describe 'k against a real cluster' -Tag 'Smoke' {
             $result | ForEach-Object {
                 $_ | Should -Not -BeOfType [string]
                 $_.PSObject.TypeNames[0] | Should -Be $Type
-                $_.PSObject.Properties.Name | Should -Contain 'NAME'
+                # events tables have no NAME column; they lead with LAST SEEN
+                $key = if ($Type -like 'get-events*') { 'LAST SEEN' } else { 'NAME' }
+                $_.PSObject.Properties.Name | Should -Contain $key
             }
             if ($Type -like '*-ns*' -and $Type -notlike 'config-*') {
                 $result[0].PSObject.Properties.Name | Should -Contain 'NAMESPACE'
@@ -220,12 +222,13 @@ Describe 'k against a real cluster' -Tag 'Smoke' {
         }
 
         It 'a failing command throws under ErrorActionPreference Stop' {
-            $previous = $ErrorActionPreference
+            # a module function only sees the global preference, not this scope's
+            $previous = $global:ErrorActionPreference
             try {
-                $ErrorActionPreference = 'Stop'
+                $global:ErrorActionPreference = 'Stop'
                 { k get nosuchthing } | Should -Throw
             } finally {
-                $ErrorActionPreference = $previous
+                $global:ErrorActionPreference = $previous
             }
         }
     }
