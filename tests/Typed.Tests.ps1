@@ -206,3 +206,113 @@ Describe 'KubectlValue in a pipeline' {
         $rows[0].RESTARTS -match '3h15m' | Should -BeTrue
     }
 }
+
+Describe 'typed cells from k, on the fixtures' {
+    BeforeDiscovery {
+        . (Join-Path $PSScriptRoot 'TestHelpers.ps1')
+        # every converted fixture except the one that only repeats get-deployment by another spelling
+        $script:viewCases = Get-FixtureManifest | Where-Object { $_.typeName -and $_.name -notmatch 'slash|by-name' } |
+            ForEach-Object { @{ Name = $_.name; Kargs = @($_.args); TypeName = $_.typeName } }
+    }
+
+    BeforeAll {
+        Enable-RealKubectlTripwire
+        Install-FakeKubectl -Module $script:module
+        # the same format file the build ships, generated from the fixtures
+        $script:formatFile = Join-Path ([System.IO.Path]::GetTempPath()) "specialK-typed-$([guid]::NewGuid().ToString('N')).format.ps1xml"
+        & (Join-Path $script:RepoRoot 'repoScripts' 'New-FormatFile.ps1') -OutPath $script:formatFile 6>$null
+        Update-FormatData -PrependPath $script:formatFile
+    }
+
+    AfterAll {
+        Remove-FakeKubectl
+        Disable-RealKubectlTripwire
+        Remove-Item $script:formatFile -ErrorAction Ignore
+    }
+
+    BeforeEach {
+        Reset-FakeKubectl
+        Register-ManifestFixtures
+    }
+
+    It 'prints the same cell text as kubectl for <Name>' -ForEach $script:viewCases {
+        $lines = Get-FixtureLines $Name
+        $expected = Get-ExpectedTable $lines
+        $objects = @(k @Kargs)
+        $objects.Count | Should -Be $expected.Rows.Count
+
+        # property text: ToString of every cell is the fixture cell, typed or not
+        for ($i = 0; $i -lt $objects.Count; $i++) {
+            foreach ($column in $expected.Columns) {
+                "$($objects[$i].$column)" | Should -BeExactly $expected.Rows[$i].$column
+            }
+        }
+
+        # on screen: with the generated view the cells show up in the same order, with the original text
+        $rendered = @(($objects | Format-Table | Out-String -Width 3000) -split "`r?`n" | Where-Object { $_.Trim() })
+        # two lines of header and rule, then one line per object
+        $rendered.Count | Should -Be ($expected.Rows.Count + 2)
+        for ($i = 0; $i -lt $expected.Rows.Count; $i++) {
+            $cells = @($expected.Columns | ForEach-Object { $expected.Rows[$i].$_ } | Where-Object { $_ })
+            $pattern = '^\s*' + (($cells | ForEach-Object { [regex]::Escape($_) }) -join '\s+') + '\s*$'
+            $rendered[$i + 2] | Should -Match $pattern
+        }
+    }
+
+    It 'types the typed columns of <Name> and leaves the others as strings' -ForEach $script:viewCases {
+        $typedColumns = & $script:module { $script:KubectlColumnKinds.Keys }
+        $objects = @(k @Kargs)
+        foreach ($object in $objects) {
+            foreach ($property in $object.PSObject.Properties) {
+                if ($property.Name -notin $typedColumns) {
+                    $property.Value | Should -BeOfType [string] -Because "$($property.Name) is not a typed column"
+                }
+            }
+        }
+    }
+
+    It 'sorts k get pod by age as a duration and filters it with a TimeSpan' {
+        Set-FakeKubectl -Arguments get, pod -Text @'
+NAME   READY   STATUS    RESTARTS      AGE
+a      1/1     Running   10 (5m ago)   3d13h
+b      1/1     Running   9             45s
+c      0/2     Running   100           5m12s
+d      1/1     Running   0             120d
+'@
+        $pods = @(k get pod)
+        ($pods | Sort-Object AGE).NAME | Should -Be @('b', 'c', 'a', 'd')
+        ($pods | Sort-Object RESTARTS).NAME | Should -Be @('d', 'b', 'a', 'c')
+        ($pods | Where-Object RESTARTS -gt 3).NAME | Should -Be @('a', 'b', 'c')
+        ($pods | Where-Object AGE -lt (New-TimeSpan -Hours 1)).NAME | Should -Be @('b', 'c')
+        ($pods | Where-Object READY -lt 1).NAME | Should -Be @('c')
+        $pods[0].RESTARTS.ToString() | Should -BeExactly '10 (5m ago)'
+    }
+
+    It 'sums top pod cpu and memory, and sorts them by quantity' {
+        $pods = @(k top pod)
+        ($pods | Measure-Object 'CPU(cores)' -Sum).Sum | Should -Be 3
+        ($pods | Measure-Object 'MEMORY(bytes)' -Sum).Sum | Should -Be (25 * 1MB)
+        ($pods | Sort-Object 'MEMORY(bytes)' -Descending | Select-Object -First 1).NAME | Should -Be 'web-c7d75d445-xk9rw'
+    }
+
+    It 'types the node percent columns of top node' {
+        $node = @(k top node)[0]
+        ($node.'CPU(%)').Value | Should -Be 5
+        ($node.'MEMORY(%)').Value | Should -Be 26
+        $node.'MEMORY(bytes)'.Value | Should -Be 1GB
+        $node.'MEMORY(bytes)'.ToString() | Should -BeExactly '1024Mi'
+    }
+
+    It 'sorts events by last seen as a duration' {
+        $events = @(k get events)
+        $sorted = @($events | Sort-Object 'LAST SEEN')
+        $sorted[0].'LAST SEEN'.ToString() | Should -BeExactly '7s'
+        $sorted[-1].'LAST SEEN'.ToString() | Should -BeExactly '6m52s'
+    }
+
+    It 'passes -o json straight through, with no typed objects' {
+        Set-FakeKubectl -Arguments get, pod, -o, json -Text '{"items":[]}'
+        $out = @(k get pod -o json)
+        $out[0] | Should -BeOfType [string]
+    }
+}

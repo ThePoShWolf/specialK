@@ -4,6 +4,7 @@ function ConvertFrom-KubectlTable {
         Column starts come from the header: a column begins at a word that follows two or more spaces,
         because values can be empty in the data lines. Data lines shorter than the header are padded,
         never dropped, so a missing trailing value is an empty property.
+        Columns listed in ConvertTo-KubectlValue become typed values that still print as kubectl printed them.
     #>
     [CmdletBinding()]
     param(
@@ -21,6 +22,9 @@ function ConvertFrom-KubectlTable {
     }
     $rows -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';' | ForEach-Object {
         $_.PSObject.TypeNames.Insert(0, $TypeName)
+        foreach ($property in $_.PSObject.Properties) {
+            $property.Value = ConvertTo-KubectlValue -Text $property.Value -Column $property.Name
+        }
         $_
     }
 }
