@@ -1,4 +1,5 @@
 # specialK
+[![CI](https://github.com/ThePoShWolf/specialK/actions/workflows/ci.yml/badge.svg)](https://github.com/ThePoShWolf/specialK/actions/workflows/ci.yml)
 
 This is **NOT** a verb-noun wrapper for `kubectl`. This is a simple, opinionated alias to `kubectl`.
 
