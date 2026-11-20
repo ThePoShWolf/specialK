@@ -1,7 +1,7 @@
 <#
     Shared helpers for the specialK tests. No cluster and no network are needed.
 
-    How the code under test is loaded: the build concatenates src/using.ps1, src/public/*.ps1 and
+    How the code under test is loaded: the build concatenates src/using.ps1, src/private/*.ps1, src/public/*.ps1 and
     src/onload.ps1 into one .psm1 and ships formats.json beside it. Import-SpecialKSource does the
     same into a temp folder (same order, unmodified source files), so `k` runs inside a real module
     and finds $script:objectCommands exactly as it does when installed. It does not use ModuleBuild,
@@ -43,6 +43,7 @@ function Import-SpecialKSource {
     Copy-Item (Join-Path $src 'formats.json') $dir
     $parts = & {
         Get-Item (Join-Path $src 'using.ps1')
+        Get-ChildItem (Join-Path $src 'private') -Filter *.ps1 -File -ErrorAction Ignore
         Get-ChildItem (Join-Path $src 'public') -Filter *.ps1 -File
         Get-Item (Join-Path $src 'onload.ps1')
     }
