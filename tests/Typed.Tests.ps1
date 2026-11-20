@@ -211,6 +211,38 @@ Describe 'KubectlValue in a pipeline' {
         ($rows[0].RESTARTS -eq $rows[1].RESTARTS) | Should -BeTrue
     }
 
+    It 'compares typed cells by value, not by the text they happen to share' {
+        # a cpu cell printed 1 is 1000 millicores: it is not 1, and it is 1000
+        $cpu = (New-Rows 'CPU(cores)' @('1'))[0].'CPU(cores)'
+        ($cpu -eq 1) | Should -BeFalse
+        ($cpu -eq 1000) | Should -BeTrue
+        ($cpu -eq '1') | Should -BeFalse
+        ($cpu -eq '1000m') | Should -BeFalse
+        ($cpu -eq '1000') | Should -BeTrue
+        $rows = New-Rows 'CPU(cores)' @('1', '1000m', '250m')
+        @($rows | Where-Object 'CPU(cores)' -eq 1000).Count | Should -Be 2
+        @($rows | Where-Object 'CPU(cores)' -eq 1).Count | Should -Be 0
+        # the same quantity written two ways is one group
+        @($rows | Group-Object 'CPU(cores)').Count | Should -Be 2
+        # equal values hash alike, whatever their numeric type
+        $asDouble = & $script:module { [KubectlValue]::new([double]1000) }
+        $cpu.Equals($asDouble) | Should -BeTrue
+        $cpu.GetHashCode() | Should -Be $asDouble.GetHashCode()
+    }
+
+    It 'does not treat cells without a value as equal to everything' {
+        $unknown = (New-Rows AGE @('<unknown>'))[0].AGE
+        ($unknown -eq 'banana') | Should -BeFalse
+        ($unknown -eq '<none>') | Should -BeFalse
+        ($unknown -eq '<unknown>') | Should -BeTrue
+        ($unknown -eq '<UNKNOWN>') | Should -BeTrue
+        $none = (New-Rows AGE @('<none>'))[0].AGE
+        ($unknown -eq $none) | Should -BeFalse
+        ($none -eq $none) | Should -BeTrue
+        @(New-Rows AGE @('<unknown>', '<none>', '<unknown>') | Group-Object AGE).Count | Should -Be 2
+        (New-Rows AGE @('<unknown>', '5m') | Sort-Object AGE | Select-Object -First 1).AGE.ToString() | Should -Be '5m'
+    }
+
     It 'exports and formats the original text' {
         $rows = New-Rows RESTARTS @('2 (3h15m ago)', '9')
         ($rows | ConvertTo-Csv -NoTypeInformation) | Should -Contain '"r0","2 (3h15m ago)"'

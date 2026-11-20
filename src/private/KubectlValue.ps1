@@ -52,19 +52,23 @@ class KubectlValue : System.IComparable, System.IConvertible {
         return $this.Text
     }
 
-    # Numbers compare as numbers, durations as durations. Anything else (no Value, or a number against a
-    # duration) is ordered after, never an error: a bad comparison must not break a pipeline.
+    # Numbers compare as numbers, durations as durations. Anything else (a number against a duration) is
+    # ordered after, never an error: a bad comparison must not break a pipeline. The text only decides when a
+    # side has no Value to compare: two cells without one are equal when they print the same, and ordered by
+    # their text otherwise. A cell with a Value sorts before one without.
     [int] CompareTo([object]$other) {
-        # the same text is always equal, so existing filters like READY -eq '1/1' keep working
-        $theirText = if ($other -is [KubectlValue]) { $other.Text } else { "$other" }
-        if ([string]::Equals($this.Text, $theirText, [System.StringComparison]::OrdinalIgnoreCase)) { return 0 }
         # a plain string is read the same way as on the right of -lt/-gt ('1h', '3')
         if ($other -is [string]) { $other = [KubectlValue]::new([string]$other) }
         $theirs = if ($other -is [KubectlValue]) { $other.Value } else { $other }
+        $theirText = if ($other -is [KubectlValue]) { $other.Text } else { "$other" }
         $mine = $this.Value
-        if ($null -eq $mine -and $null -eq $theirs) { return 0 }
-        if ($null -eq $mine) { return 1 }
-        if ($null -eq $theirs) { return -1 }
+        if ($null -eq $mine -or $null -eq $theirs) {
+            $byText = [string]::Compare($this.Text, $theirText, [System.StringComparison]::OrdinalIgnoreCase)
+            if ($byText -eq 0) { return 0 }
+            if ($null -eq $mine -and $null -eq $theirs) { return [Math]::Sign($byText) }
+            if ($null -eq $mine) { return 1 }
+            return -1
+        }
         if ($mine -is [timespan] -and $theirs -is [timespan]) { return $mine.CompareTo($theirs) }
         if ($mine -is [timespan] -or $theirs -is [timespan]) { return 1 }
         $a = 0.0
@@ -81,8 +85,13 @@ class KubectlValue : System.IComparable, System.IConvertible {
         return $this.CompareTo($other) -eq 0
     }
 
+    # Must agree with Equals: numbers hash as doubles (1000 and 1000.0 are equal), cells without a Value by their
+    # text, ignoring case.
     [int] GetHashCode() {
-        if ($null -eq $this.Value) { return $this.Text.GetHashCode() }
+        if ($null -eq $this.Value) { return $this.Text.ToUpperInvariant().GetHashCode() }
+        if ($this.Value -is [timespan]) { return $this.Value.GetHashCode() }
+        $number = 0.0
+        if ([double]::TryParse("$($this.Value)", [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$number)) { return $number.GetHashCode() }
         return $this.Value.GetHashCode()
     }
 
