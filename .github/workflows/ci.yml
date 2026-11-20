@@ -289,7 +289,17 @@ jobs:
         if: steps.decide.outputs.release == 'true'
         env:
           PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
-        run: Invoke-Build PublishBuilt
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # A rerun after a failed tag/release step finds the version already on the Gallery. Publishing it again
+          # would fail before the GitHub Release is created, so skip straight to the tag step.
+          $version = '${{ steps.decide.outputs.version }}'
+          $found = Find-PSResource -Name specialK -Version $version -Repository PSGallery -ErrorAction SilentlyContinue
+          if ($found) {
+            Write-Output "::notice title=Already published::specialK $version is already on the PowerShell Gallery, so it is not published again."
+            return
+          }
+          Invoke-Build PublishBuilt
 
       - name: Tag and create the GitHub Release
         if: steps.decide.outputs.release == 'true'
