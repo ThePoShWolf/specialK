@@ -205,3 +205,25 @@ Describe 'manifest' {
         $built.PrivateData.PSData.Prerelease | Should -Be 'preview0042'
     }
 }
+
+Describe 'Publish tasks' {
+    BeforeAll {
+        $script:buildFile = Join-Path $script:RepoRoot 'specialK.build.ps1'
+    }
+
+    It 'skips with a warning annotation, and succeeds, when there is no API key' {
+        $dir = Join-Path $script:work 'publish-nokey'
+        $out = (& $script:pwsh -NoProfile -NonInteractive -c "`$env:PSGALLERY_API_KEY=''; Invoke-Build ModuleBuild, PublishBuilt -File '$($script:buildFile)' -BuildPath '$dir' *>&1 | Out-String") -join "`n"
+        $LASTEXITCODE | Should -Be 0 -Because $out
+        $out | Should -Match '::warning title=Not published::'
+        $out | Should -Not -Match 'Publishing specialK'
+    }
+
+    It 'refuses to publish when nothing was built' {
+        $dir = Join-Path $script:work 'publish-nobuild'
+        $out = (& $script:pwsh -NoProfile -NonInteractive -c "Invoke-Build PublishBuilt -File '$($script:buildFile)' -BuildPath '$dir' -NugetApiKey not-a-real-key *>&1 | Out-String 2>&1" 2>&1) -join "`n"
+        $LASTEXITCODE | Should -Not -Be 0
+        $out | Should -Match 'No built module'
+        $out | Should -Not -Match 'not-a-real-key(?!\W*\*)' -Because 'the key must never be echoed'
+    }
+}

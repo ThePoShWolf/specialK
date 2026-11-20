@@ -155,14 +155,33 @@ task SmokeTest {
     }
 }
 
-# Publishes the built module. Does nothing unless -NugetApiKey is given. (Release flow is reworked in a later phase.)
-task Publish Test, ModuleBuild, {
-    if (-not $NugetApiKey) {
-        Write-Host 'No -NugetApiKey given, not publishing.'
+# Publishes the already-built module to the PowerShell Gallery with Publish-PSResource. It never rebuilds: build first
+# (Invoke-Build ModuleBuild [-PreRelease <label>]), then publish what was built, so what gets published is exactly what
+# was tested. A prerelease is just -PreRelease on the build, e.g. -PreRelease preview0042 gives 0.5.0-preview0042.
+# The API key comes from -NugetApiKey or the PSGALLERY_API_KEY environment variable and is never printed.
+# With no key the task warns and skips, so CI stays green until the secret exists.
+#   Invoke-Build ModuleBuild, PublishBuilt -PreRelease preview0042
+task PublishBuilt {
+    $apiKey = if ($NugetApiKey) { $NugetApiKey } else { $env:PSGALLERY_API_KEY }
+    if (-not $apiKey) {
+        Write-Host '::warning title=Not published::No API key (-NugetApiKey or PSGALLERY_API_KEY), so nothing was published.'
         return
     }
-    Publish-Module -Path $modulePath -NuGetApiKey $NugetApiKey -Repository PSGallery
+    $manifest = Join-Path $modulePath "$moduleName.psd1"
+    if (-not (Test-Path $manifest)) {
+        throw "No built module at '$modulePath'. Run 'Invoke-Build ModuleBuild' first."
+    }
+    $built = Import-PowerShellDataFile $manifest
+    $label = $built.PrivateData.PSData.Prerelease
+    $full = if ($label) { "$($built.ModuleVersion)-$label" } else { "$($built.ModuleVersion)" }
+    Write-Host "Publishing $moduleName $full to PSGallery"
+    Publish-PSResource -Path $modulePath -Repository PSGallery -ApiKey $apiKey -ErrorAction Stop
+    Write-Host "Published $moduleName $full"
 }
+
+# Build, test, then publish. Does nothing past the tests unless an API key is given. Use PublishBuilt to publish a
+# module that is already built and tested.
+task Publish ModuleBuild, Test, PublishBuilt
 
 # Build, then test. Does not publish.
 task All ModuleBuild, Test
