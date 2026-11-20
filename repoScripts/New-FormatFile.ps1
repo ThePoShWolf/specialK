@@ -56,7 +56,9 @@ function Get-HeaderColumn {
     @($Header.Trim() -split '\s{2,}' | Where-Object { $_ -ne '' })
 }
 
+# Builds an in-memory XML fragment; nothing is changed on the system, so ShouldProcess does not apply.
 function New-FormatView {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
     param(
         [string]$name,
         [string[]]$props
