@@ -6,8 +6,11 @@
             "helm": "none",
             "minikube": "none"
         },
-        "ghcr.io/devcontainers/features/azure-cli:1": {},
-        "ghcr.io/devcontainers/features/powershell:1": {}
+        "ghcr.io/devcontainers/features/powershell:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+        "ghcr.io/devcontainers-extra/features/kind:1": {
+            "version": "0.30.0"
+        }
     },
     "customizations": {
         "vscode": {
@@ -24,5 +27,5 @@
     },
     "postCreateCommand": "kubectl version --client",
     "remoteUser": "vscode",
-    "onCreateCommand": "echo hello"
+    "onCreateCommand": "pwsh -NoProfile -File repoScripts/Install-BuildDependency.ps1"
 }
