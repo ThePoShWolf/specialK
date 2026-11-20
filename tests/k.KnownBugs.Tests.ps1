@@ -107,12 +107,12 @@ Describe 'k, known bugs' -Tag 'KnownBug' {
         It 'a data line shorter than a header position does not throw' {
             $text = "NAME   READY   STATUS    RESTARTS   AGE`nweb    1/1`n"
             Set-FakeKubectl -Arguments 'get', 'pod' -Text $text
-            $previous = $ErrorActionPreference
+            $previous = $global:ErrorActionPreference
             try {
-                $ErrorActionPreference = 'Stop'
+                $global:ErrorActionPreference = 'Stop'
                 $result = @(k get pod)
             } finally {
-                $ErrorActionPreference = $previous
+                $global:ErrorActionPreference = $previous
             }
             $result.Count | Should -Be 1
             $result[0].NAME | Should -Be 'web'
@@ -121,25 +121,25 @@ Describe 'k, known bugs' -Tag 'KnownBug' {
 
         It 'a failing kubectl call (non-zero exit code) surfaces as a PowerShell error' {
             Set-FakeKubectl -Arguments 'get', 'pod', 'nope' -ExitCode 1
-            $previous = $ErrorActionPreference
+            $previous = $global:ErrorActionPreference
             try {
-                $ErrorActionPreference = 'Stop'
+                $global:ErrorActionPreference = 'Stop'
                 { k get pod nope } | Should -Throw
             } finally {
-                $ErrorActionPreference = $previous
+                $global:ErrorActionPreference = $previous
             }
         }
 
         It 'a failing kubectl call keeps its exit code while surfacing the error' {
             Set-FakeKubectl -Arguments 'get', 'pod', 'nope' -ExitCode 3
-            $previous = $ErrorActionPreference
+            $previous = $global:ErrorActionPreference
             try {
-                $ErrorActionPreference = 'SilentlyContinue'
+                $global:ErrorActionPreference = 'SilentlyContinue'
                 $Error.Clear()
                 $null = k get pod nope
                 $errorCount = $Error.Count
             } finally {
-                $ErrorActionPreference = $previous
+                $global:ErrorActionPreference = $previous
             }
             $LASTEXITCODE | Should -Be 3
             $errorCount | Should -BeGreaterThan 0 -Because 'the failure must also be reported as an error record'
