@@ -124,3 +124,51 @@ Describe 'Get-KubectlArgumentInfo' {
         (& $script:module { Get-KubectlArgumentInfo -Arguments $null }).Verb | Should -BeNullOrEmpty
     }
 }
+
+Describe 'ConvertTo-KubectlResourceName' {
+    It '<Name> -> <Expected>' -ForEach @(
+        @{ Name = 'pods'; Expected = 'pod' }
+        @{ Name = 'pod'; Expected = 'pod' }
+        @{ Name = 'po'; Expected = 'pod' }
+        @{ Name = 'Pods'; Expected = 'pod' }
+        @{ Name = 'deployments'; Expected = 'deployment' }
+        @{ Name = 'deploy'; Expected = 'deployment' }
+        @{ Name = 'services'; Expected = 'service' }
+        @{ Name = 'svc'; Expected = 'service' }
+        @{ Name = 'namespaces'; Expected = 'namespace' }
+        @{ Name = 'ns'; Expected = 'namespace' }
+        @{ Name = 'nodes'; Expected = 'node' }
+        @{ Name = 'no'; Expected = 'node' }
+        @{ Name = 'event'; Expected = 'events' }
+        @{ Name = 'events'; Expected = 'events' }
+        @{ Name = 'ev'; Expected = 'events' }
+        @{ Name = 'ingress'; Expected = 'ingress' }
+        @{ Name = 'ingresses'; Expected = 'ingress' }
+        @{ Name = 'ing'; Expected = 'ingress' }
+        @{ Name = 'endpoints'; Expected = 'endpoints' }
+        @{ Name = 'pod/web-x'; Expected = 'pod' }
+        @{ Name = 'deploy/web'; Expected = 'deployment' }
+        @{ Name = 'deployment/web'; Expected = 'deployment' }
+        @{ Name = 'deployments.apps'; Expected = 'deployment' }
+        @{ Name = 'deployments.v1.apps'; Expected = 'deployment' }
+        @{ Name = 'deployments.apps/web'; Expected = 'deployment' }
+        @{ Name = 'get-contexts'; Expected = 'get-contexts' }
+        @{ Name = 'widgets'; Expected = 'widgets' }
+        @{ Name = 'Widgets.example.com'; Expected = 'widgets.example.com' }
+    ) {
+        Get-Resource $Name | Should -Be $Expected
+    }
+
+    It 'does not strip a trailing s by guessing: ingress stays ingress, not ingres' {
+        Get-Resource 'ingress' | Should -Be 'ingress'
+        Get-Resource 'status' | Should -Be 'status'
+    }
+
+    It 'returns nothing for <Case>' -ForEach @(
+        @{ Case = 'null'; Name = $null }
+        @{ Case = 'an empty string'; Name = '' }
+        @{ Case = 'a comma-separated list'; Name = 'pods,svc' }
+    ) {
+        Get-Resource $Name | Should -BeNullOrEmpty
+    }
+}
