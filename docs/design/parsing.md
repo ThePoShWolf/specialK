@@ -37,7 +37,7 @@ Facts and decisions for the parsing design note. Bullets only; turn them into pr
 
 ## Known limits
 
-- Cells containing `;` or `"`: rows are split with an inserted `;` and read by `ConvertFrom-Csv -Delimiter ';'`, so such a cell breaks its row or its quoting. Seen only in free text columns (events MESSAGE) so far; not seen in the allow-listed columns.
+- Cells containing `;` or `"`: rows are split with an inserted `;` and read by `ConvertFrom-Csv -Delimiter ';'`, so such a cell breaks its row or its quoting. Most likely in free-text columns (events MESSAGE, ingress HOSTS, job SELECTOR); not seen in the fixtures.
 - Wide Unicode (CJK, emoji) in names: kubectl pads by rune count, not display width; column starts come from the header, so alignment can shift.
 - kubectl layout changes: columns come from the header line, so added or reordered columns work, a renamed column silently loses its type (string). Fixtures pin one kubectl version (1.31); refresh with `repoScripts/Update-Fixtures.ps1` and review the diff.
 - Column names are mapped globally, not per resource; a future resource that reuses a typed name for something else (`READY`, `DATA`, `CAPACITY`) would be mis-typed. Check when adding resources.
