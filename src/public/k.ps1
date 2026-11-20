@@ -1,65 +1,32 @@
 function k {
-    $skipArgs = @(
-        'exec', 'cp', 'scale', 'rollout', 'delete', 'logs'
-    )
-    if ($skipArgs -contains $args[0]) {
-        & kubectl $args
+    # Behaves like kubectl for everything except the commands listed in formats.json, and only when
+    # the output is the default table or -o wide. Those are captured and turned into objects; anything
+    # else (watching, -o yaml, exec, edit, unknown verbs) goes straight to kubectl with nothing captured,
+    # so it streams and keeps the terminal.
+    $info = Get-KubectlArgumentInfo -Arguments $args
+    $resource = $null
+    if ($info.Verb) {
+        $resource = ConvertTo-KubectlResourceName -Name ($info.Positionals | Select-Object -First 1)
+    }
+    $convert = $resource -and
+        ($objectCommands[$info.Verb] -contains $resource) -and
+        -not $info.Watch -and
+        -not $info.NoHeaders -and
+        ($null -eq $info.Output -or $info.Output -ceq 'wide')
+
+    if (-not $convert) {
+        & kubectl @args
+        return
+    }
+
+    $out = & kubectl @args
+    # kubectl's default tables start with one of these headers
+    if ($out -and ($out[0] -match '^(NAME( |$)|NAMESPACE |CURRENT |LAST SEEN )')) {
+        $typeName = "$($info.Verb)-$resource"
+        if ($out[0] -match '^NAMESPACE ') { $typeName += '-ns' }
+        if ($info.Output -ceq 'wide') { $typeName += '-wide' }
+        ConvertFrom-KubectlTable -Lines @($out) -TypeName $typeName
     } else {
-        $out = (& kubectl $args)
-        # if the output starts with the typical headers
-        if ($out -and ($out[0] -match '^(NAME |NAMESPACE |CURRENT |LAST SEEN )') ) {
-            # check for namespace
-            $namespace = $out[0] -match '^NAMESPACE'
-
-            # check for output
-            $checkArgs = $args[2..$args.count]
-            foreach ($arg in $checkArgs) {
-                if ($arg -match '^--output=?(?<type>.*)?') {
-                    $outputType = if ($Matches.type.length -gt 0) {
-                        $Matches.type
-                    } else {
-                        $checkArgs[$checkArgs.IndexOf($arg) + 1]
-                    }
-                } elseif ($arg -match '^-o=?(?<type>.*)?') {
-                    $outputType = if ($Matches.type.length -gt 0) {
-                        $Matches.type
-                    } else {
-                        $checkArgs[$checkArgs.IndexOf($arg) + 1]
-                    }
-                }
-            }
-
-            # locate all positions to place semicolons
-            # we are using the headers since some values may be null in the data
-            if ($null -ne $out) {
-                $m = $out[0] | Select-String -Pattern '  \S' -AllMatches
-            }
-
-            # place semicolons
-            $out = foreach ($line in $out) {
-                foreach ($index in ($m.Matches.Index | Sort-Object -Descending)) {
-                    $line = $line.Insert($index + 2, ';')
-                }
-                $line
-            }
-            $pluralCheck = $args[1]
-            if ( $args[0] -eq 'get' ) { $pluralCheck = $pluralCheck -replace '(.*)s$', '$1' }
-            if ($objectCommands[$args[0]] -contains $pluralCheck) {
-                # select the format type name
-                if ($namespace) {
-                    $typeName = "$($args[0])-$($pluralCheck)-ns"
-                } else {
-                    $typeName = "$($args[0])-$($pluralCheck)"
-                }
-                if ($outputType -eq 'wide') {
-                    $typeName = "$typeName-wide"
-                }
-                $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';' | ForEach-Object { $_.PSObject.TypeNames.Insert(0, $typeName); $_ }
-            } else {
-                $out -replace ' +;', ';' | ForEach-Object { $_.Trim() } | ConvertFrom-Csv -Delimiter ';'
-            }
-        } else {
-            $out
-        }
+        $out
     }
 }

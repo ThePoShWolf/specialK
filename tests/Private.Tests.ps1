@@ -172,3 +172,46 @@ Describe 'ConvertTo-KubectlResourceName' {
         Get-Resource $Name | Should -BeNullOrEmpty
     }
 }
+
+Describe 'ConvertFrom-KubectlTable' {
+    BeforeAll {
+        function Convert-Table {
+            param([string[]]$Lines, [string]$TypeName = 'test-type')
+            & $script:module { param($l, $t) ConvertFrom-KubectlTable -Lines $l -TypeName $t } $Lines $TypeName
+        }
+    }
+
+    It 'parses a single column table whose header is a bare NAME' {
+        $result = @(Convert-Table @('NAME', 'k3s-specialk', 'other'))
+        $result.Count | Should -Be 2
+        $result[0].NAME | Should -Be 'k3s-specialk'
+        $result[1].NAME | Should -Be 'other'
+    }
+
+    It 'pads data lines that are shorter than the header instead of throwing or dropping them' {
+        $result = @(Convert-Table @('NAME   READY   STATUS    RESTARTS   AGE', 'web    1/1'))
+        $result.Count | Should -Be 1
+        $result[0].NAME | Should -Be 'web'
+        $result[0].READY | Should -Be '1/1'
+        $result[0].STATUS | Should -BeNullOrEmpty
+        $result[0].AGE | Should -BeNullOrEmpty
+    }
+
+    It 'keeps an empty cell in the middle empty' {
+        $result = @(Convert-Table @('CURRENT   NAME   NAMESPACE', '*         ctx', '          other   demo'))
+        $result[0].CURRENT | Should -Be '*'
+        $result[0].NAMESPACE | Should -BeNullOrEmpty
+        $result[1].NAME | Should -Be 'other'
+        $result[1].NAMESPACE | Should -Be 'demo'
+    }
+
+    It 'keeps multi-word column names and values with single spaces' {
+        $result = @(Convert-Table @('LAST SEEN   TYPE     MESSAGE', '5s          Normal   Pulled the image'))
+        $result[0].'LAST SEEN' | Should -Be '5s'
+        $result[0].MESSAGE | Should -Be 'Pulled the image'
+    }
+
+    It 'stamps the type name first' {
+        (Convert-Table @('NAME', 'a') 'my-type').PSObject.TypeNames[0] | Should -Be 'my-type'
+    }
+}
