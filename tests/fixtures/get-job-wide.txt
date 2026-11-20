@@ -1,0 +1,2 @@
+NAME      STATUS    COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                       SELECTOR
+migrate   Running   0/1           34s        34s   m            registry.k8s.io/pause:3.10   batch.kubernetes.io/controller-uid=97b8806c-f470-42fb-94d5-d814d66ef2da

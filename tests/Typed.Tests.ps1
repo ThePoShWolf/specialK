@@ -315,4 +315,54 @@ d      1/1     Running   0             120d
         $out = @(k get pod -o json)
         $out[0] | Should -BeOfType [string]
     }
+
+    It 'gives k <Command> the type name <TypeName> (short names, -A, -o wide)' -ForEach @(
+        @{ Command = 'get ingress'; Fixture = 'get-ingress'; Kargs = @('get', 'ingress'); TypeName = 'get-ingress' }
+        @{ Command = 'get ing -A'; Fixture = 'get-ingress-ns'; Kargs = @('get', 'ing', '-A'); TypeName = 'get-ingress-ns' }
+        @{ Command = 'get cm'; Fixture = 'get-configmap'; Kargs = @('get', 'cm'); TypeName = 'get-configmap' }
+        @{ Command = 'get configmaps -A -o wide'; Fixture = 'get-configmap-ns-wide'; Kargs = @('get', 'configmaps', '-A', '-o', 'wide'); TypeName = 'get-configmap-ns-wide' }
+        @{ Command = 'get secrets'; Fixture = 'get-secret'; Kargs = @('get', 'secrets'); TypeName = 'get-secret' }
+        @{ Command = 'get secret -o wide'; Fixture = 'get-secret-wide'; Kargs = @('get', 'secret', '-o', 'wide'); TypeName = 'get-secret-wide' }
+        @{ Command = 'get pvc'; Fixture = 'get-persistentvolumeclaim'; Kargs = @('get', 'pvc'); TypeName = 'get-persistentvolumeclaim' }
+        @{ Command = 'get persistentvolumeclaims -A'; Fixture = 'get-persistentvolumeclaim-ns'; Kargs = @('get', 'persistentvolumeclaims', '-A'); TypeName = 'get-persistentvolumeclaim-ns' }
+        @{ Command = 'get jobs'; Fixture = 'get-job'; Kargs = @('get', 'jobs'); TypeName = 'get-job' }
+        @{ Command = 'get job -A -o wide'; Fixture = 'get-job-ns-wide'; Kargs = @('get', 'job', '-A', '-o', 'wide'); TypeName = 'get-job-ns-wide' }
+        @{ Command = 'get sts'; Fixture = 'get-statefulset'; Kargs = @('get', 'sts'); TypeName = 'get-statefulset' }
+        @{ Command = 'get statefulset -o wide'; Fixture = 'get-statefulset-wide'; Kargs = @('get', 'statefulset', '-o', 'wide'); TypeName = 'get-statefulset-wide' }
+    ) {
+        # the fake answers only the exact arguments it is given, so serve this spelling the fixture of its canonical form
+        Set-FakeKubectl -Arguments $Kargs -Fixture $Fixture
+        $result = @(k @Kargs)
+        $result.Count | Should -BeGreaterThan 0
+        $result | ForEach-Object { $_.PSObject.TypeNames[0] | Should -Be $TypeName }
+    }
+
+    It 'sorts and filters jobs, statefulsets and config data by their typed columns' {
+        Set-FakeKubectl -Arguments get, job -Text @'
+NAME      STATUS    COMPLETIONS   DURATION   AGE
+a         Running   0/2           34s        3d13h
+b         Complete  1/1           5m12s      45s
+c         Running   1/2           2h3m       120d
+'@
+        $jobs = @(k get job)
+        ($jobs | Sort-Object DURATION).NAME | Should -Be @('a', 'b', 'c')
+        ($jobs | Where-Object COMPLETIONS -lt 1).NAME | Should -Be @('a', 'c')
+        ($jobs | Sort-Object AGE).NAME | Should -Be @('b', 'a', 'c')
+        $maps = @(k get configmap -A)
+        ($maps | Sort-Object DATA -Descending | Select-Object -First 1).NAME | Should -Be 'extension-apiserver-authentication'
+        ($maps | Where-Object DATA -gt 2).Count | Should -Be 2
+    }
+
+    It 'a bound persistent volume claim capacity sorts by size' {
+        Set-FakeKubectl -Arguments get, persistentvolumeclaim -Text @'
+NAME   STATUS   VOLUME    CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+big    Bound    pvc-1     10Gi       RWO            local-path     <unset>                 3d
+mid    Bound    pvc-2     512Mi      RWO            local-path     <unset>                 3d
+new    Pending                                      local-path     <unset>                 5s
+'@
+        $claims = @(k get persistentvolumeclaim)
+        ($claims | Where-Object CAPACITY -gt 1GB).NAME | Should -Be @('big')
+        $claims[2].CAPACITY | Should -BeExactly ''
+        { $claims | Sort-Object CAPACITY } | Should -Not -Throw
+    }
 }

@@ -1,0 +1,3 @@
+NAMESPACE   NAME   CLASS    HOSTS              ADDRESS   PORTS   AGE
+default     web    <none>   web.example.test             80      33s
+demo        api    <none>   api.example.test             80      33s

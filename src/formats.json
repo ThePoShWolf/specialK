@@ -5,7 +5,13 @@
         "namespace",
         "node",
         "service",
-        "events"
+        "events",
+        "ingress",
+        "configmap",
+        "secret",
+        "persistentvolumeclaim",
+        "job",
+        "statefulset"
     ],
     "top": [
         "pod",

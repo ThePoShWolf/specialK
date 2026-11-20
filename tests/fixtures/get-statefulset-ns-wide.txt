@@ -1,0 +1,3 @@
+NAMESPACE   NAME    READY   AGE   CONTAINERS   IMAGES
+default     db      0/1     34s   db           registry.k8s.io/pause:3.10
+demo        queue   0/2     34s   q            registry.k8s.io/pause:3.10

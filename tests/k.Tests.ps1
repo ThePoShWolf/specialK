@@ -197,13 +197,13 @@ Describe 'k, offline' {
 
     Context 'k passes unsupported commands through unchanged' {
         It 'k <Command> returns kubectl''s raw lines, not objects' -ForEach @(
-            @{ Command = 'get secrets -A'; Kargs = @('get', 'secrets', '-A'); Fixture = 'get-secrets-ns' }
-            @{ Command = 'get configmap -n kube-system'; Kargs = @('get', 'configmap', '-n', 'kube-system'); Fixture = 'get-configmap' }
+            @{ Command = 'get daemonset -A'; Kargs = @('get', 'daemonset', '-A'); Fixture = 'get-pod-ns' }
+            @{ Command = 'get cronjob -n kube-system'; Kargs = @('get', 'cronjob', '-n', 'kube-system'); Fixture = 'get-pod' }
             @{ Command = 'get pods -w'; Kargs = @('get', 'pods', '-w'); Fixture = 'get-pod' }
             @{ Command = 'get pods -o yaml'; Kargs = @('get', 'pods', '-o', 'yaml'); Fixture = 'get-service-yaml' }
             @{ Command = 'get pods --no-headers'; Kargs = @('get', 'pods', '--no-headers'); Fixture = 'get-pod' }
             @{ Command = 'get pods,svc'; Kargs = @('get', 'pods,svc'); Fixture = 'get-pod' }
-            @{ Command = 'get ingress'; Kargs = @('get', 'ingress'); Fixture = 'get-pod' }
+            @{ Command = 'get replicaset'; Kargs = @('get', 'replicaset'); Fixture = 'get-pod' }
         ) {
             Set-FakeKubectl -Arguments $Kargs -Fixture $Fixture
             $result = @(k @Kargs)

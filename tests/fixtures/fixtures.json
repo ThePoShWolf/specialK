@@ -229,6 +229,282 @@
       "typeName": "get-events-ns-wide"
     },
     {
+      "name": "get-ingress",
+      "file": "get-ingress.txt",
+      "args": [
+        "get",
+        "ingress"
+      ],
+      "source": "captured",
+      "typeName": "get-ingress"
+    },
+    {
+      "name": "get-ingress-wide",
+      "file": "get-ingress-wide.txt",
+      "args": [
+        "get",
+        "ingress",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-ingress-wide"
+    },
+    {
+      "name": "get-ingress-ns",
+      "file": "get-ingress-ns.txt",
+      "args": [
+        "get",
+        "ingress",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-ingress-ns"
+    },
+    {
+      "name": "get-ingress-ns-wide",
+      "file": "get-ingress-ns-wide.txt",
+      "args": [
+        "get",
+        "ingress",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-ingress-ns-wide"
+    },
+    {
+      "name": "get-configmap",
+      "file": "get-configmap.txt",
+      "args": [
+        "get",
+        "configmap"
+      ],
+      "source": "captured",
+      "typeName": "get-configmap"
+    },
+    {
+      "name": "get-configmap-wide",
+      "file": "get-configmap-wide.txt",
+      "args": [
+        "get",
+        "configmap",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-configmap-wide"
+    },
+    {
+      "name": "get-configmap-ns",
+      "file": "get-configmap-ns.txt",
+      "args": [
+        "get",
+        "configmap",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-configmap-ns"
+    },
+    {
+      "name": "get-configmap-ns-wide",
+      "file": "get-configmap-ns-wide.txt",
+      "args": [
+        "get",
+        "configmap",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-configmap-ns-wide"
+    },
+    {
+      "name": "get-secret",
+      "file": "get-secret.txt",
+      "args": [
+        "get",
+        "secret"
+      ],
+      "source": "captured",
+      "typeName": "get-secret"
+    },
+    {
+      "name": "get-secret-wide",
+      "file": "get-secret-wide.txt",
+      "args": [
+        "get",
+        "secret",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-secret-wide"
+    },
+    {
+      "name": "get-secret-ns",
+      "file": "get-secret-ns.txt",
+      "args": [
+        "get",
+        "secret",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-secret-ns"
+    },
+    {
+      "name": "get-secret-ns-wide",
+      "file": "get-secret-ns-wide.txt",
+      "args": [
+        "get",
+        "secret",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-secret-ns-wide"
+    },
+    {
+      "name": "get-persistentvolumeclaim",
+      "file": "get-persistentvolumeclaim.txt",
+      "args": [
+        "get",
+        "persistentvolumeclaim"
+      ],
+      "source": "captured",
+      "typeName": "get-persistentvolumeclaim"
+    },
+    {
+      "name": "get-persistentvolumeclaim-wide",
+      "file": "get-persistentvolumeclaim-wide.txt",
+      "args": [
+        "get",
+        "persistentvolumeclaim",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-persistentvolumeclaim-wide"
+    },
+    {
+      "name": "get-persistentvolumeclaim-ns",
+      "file": "get-persistentvolumeclaim-ns.txt",
+      "args": [
+        "get",
+        "persistentvolumeclaim",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-persistentvolumeclaim-ns"
+    },
+    {
+      "name": "get-persistentvolumeclaim-ns-wide",
+      "file": "get-persistentvolumeclaim-ns-wide.txt",
+      "args": [
+        "get",
+        "persistentvolumeclaim",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-persistentvolumeclaim-ns-wide"
+    },
+    {
+      "name": "get-job",
+      "file": "get-job.txt",
+      "args": [
+        "get",
+        "job"
+      ],
+      "source": "captured",
+      "typeName": "get-job"
+    },
+    {
+      "name": "get-job-wide",
+      "file": "get-job-wide.txt",
+      "args": [
+        "get",
+        "job",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-job-wide"
+    },
+    {
+      "name": "get-job-ns",
+      "file": "get-job-ns.txt",
+      "args": [
+        "get",
+        "job",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-job-ns"
+    },
+    {
+      "name": "get-job-ns-wide",
+      "file": "get-job-ns-wide.txt",
+      "args": [
+        "get",
+        "job",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-job-ns-wide"
+    },
+    {
+      "name": "get-statefulset",
+      "file": "get-statefulset.txt",
+      "args": [
+        "get",
+        "statefulset"
+      ],
+      "source": "captured",
+      "typeName": "get-statefulset"
+    },
+    {
+      "name": "get-statefulset-wide",
+      "file": "get-statefulset-wide.txt",
+      "args": [
+        "get",
+        "statefulset",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-statefulset-wide"
+    },
+    {
+      "name": "get-statefulset-ns",
+      "file": "get-statefulset-ns.txt",
+      "args": [
+        "get",
+        "statefulset",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-statefulset-ns"
+    },
+    {
+      "name": "get-statefulset-ns-wide",
+      "file": "get-statefulset-ns-wide.txt",
+      "args": [
+        "get",
+        "statefulset",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-statefulset-ns-wide"
+    },
+    {
       "name": "get-deployment-by-name",
       "file": "get-deployment-by-name.txt",
       "args": [
@@ -291,29 +567,6 @@
       "source": "captured",
       "typeName": null,
       "allowEmpty": true
-    },
-    {
-      "name": "get-secrets-ns",
-      "file": "get-secrets-ns.txt",
-      "args": [
-        "get",
-        "secrets",
-        "-A"
-      ],
-      "source": "captured",
-      "typeName": null
-    },
-    {
-      "name": "get-configmap",
-      "file": "get-configmap.txt",
-      "args": [
-        "get",
-        "configmap",
-        "-n",
-        "kube-system"
-      ],
-      "source": "captured",
-      "typeName": null
     },
     {
       "name": "get-namespace-json",
