@@ -179,10 +179,10 @@ function Get-ExpectedTable {
     param([Parameter(Mandatory)][string[]]$Lines)
     $header = $Lines[0]
     $starts = @([regex]::Matches($header, '(?:^|(?<=\s\s))\S') | ForEach-Object { $_.Index })
-    $columns = for ($i = 0; $i -lt $starts.Count; $i++) {
+    $columns = @(for ($i = 0; $i -lt $starts.Count; $i++) {
         $end = if ($i + 1 -lt $starts.Count) { $starts[$i + 1] } else { $header.Length }
         $header.Substring($starts[$i], $end - $starts[$i]).Trim()
-    }
+    })
     $rows = foreach ($line in $Lines | Select-Object -Skip 1) {
         $row = [ordered]@{}
         for ($i = 0; $i -lt $starts.Count; $i++) {

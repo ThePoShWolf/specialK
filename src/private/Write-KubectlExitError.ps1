@@ -1,8 +1,9 @@
 function Write-KubectlExitError {
     <#
-        Reports a failed kubectl call as a PowerShell error. It is non-terminating, so `$?` is false and
-        -ErrorAction Stop (or $ErrorActionPreference = 'Stop') in the caller turns it into an exception.
-        $LASTEXITCODE is not touched. kubectl's own message already went to stderr.
+        Reports a failed kubectl call as a PowerShell error. It is non-terminating: it lands in $Error and
+        on the error stream, and $ErrorActionPreference = 'Stop' turns it into an exception. $LASTEXITCODE is
+        not touched, and is the reliable failure signal: `$?` stays true after any script function returns,
+        whatever it wrote to the error stream. kubectl's own message already went to stderr.
     #>
     [CmdletBinding()]
     param(
