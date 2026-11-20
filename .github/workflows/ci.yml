@@ -40,8 +40,10 @@ jobs:
           $info = ./repoScripts/Get-ReleaseInfo.ps1
           Write-Output "Version in src/specialK.psd1: $($info.Version) (tag $($info.Tag))"
           $failed = $false
-          git ls-remote --exit-code --tags origin "refs/tags/$($info.Tag)" *> $null
-          if ($LASTEXITCODE -eq 0) {
+          # without --exit-code a missing tag is exit 0 with no output; only a real lookup error is non-zero
+          $remoteTag = git ls-remote --tags origin "refs/tags/$($info.Tag)"
+          if ($LASTEXITCODE -ne 0) { throw "Could not look up tag $($info.Tag) on origin." }
+          if ($remoteTag) {
             Write-Output "::error title=Version not bumped::Tag $($info.Tag) already exists. Bump ModuleVersion in src/specialK.psd1 before merging to main."
             $failed = $true
           }
@@ -251,8 +253,10 @@ jobs:
           "version=$($info.Version)" >> $env:GITHUB_OUTPUT
           "tag=$($info.Tag)" >> $env:GITHUB_OUTPUT
           $release = 'true'
-          git ls-remote --exit-code --tags origin "refs/tags/$($info.Tag)" *> $null
-          if ($LASTEXITCODE -eq 0) {
+          # without --exit-code a missing tag is exit 0 with no output; only a real lookup error is non-zero
+          $remoteTag = git ls-remote --tags origin "refs/tags/$($info.Tag)"
+          if ($LASTEXITCODE -ne 0) { throw "Could not look up tag $($info.Tag) on origin." }
+          if ($remoteTag) {
             Write-Output "::notice title=No release::Tag $($info.Tag) already exists, so there is nothing to release. Bump ModuleVersion in src/specialK.psd1 to release again."
             $release = 'false'
           }
