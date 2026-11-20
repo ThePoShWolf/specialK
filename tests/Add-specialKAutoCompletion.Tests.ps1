@@ -63,17 +63,17 @@ Describe 'Add-specialKAutoCompletion, offline' {
 
     It 'registers nothing with -WhatIf, with or without -ToProfile' {
         # the fake completer registers for 'kubectl'; the function rewrites it to 'k'
-        Set-FakeKubectl -Arguments 'completion', 'powershell' -Text "`$global:SpecialKCompleterRan = `$true"
-        $global:SpecialKCompleterRan = $false
+        Set-FakeKubectl -Arguments 'completion', 'powershell' -Text "`$env:SPECIALK_COMPLETER_RAN = 'yes'"
+        $env:SPECIALK_COMPLETER_RAN = $null
         try {
             Add-specialKAutoCompletion -ProfilePath $script:profilePath -WhatIf
             Add-specialKAutoCompletion -ToProfile -ProfilePath $script:profilePath -WhatIf
-            $global:SpecialKCompleterRan | Should -BeFalse
+            $env:SPECIALK_COMPLETER_RAN | Should -BeNullOrEmpty
             Test-Path $script:profilePath | Should -BeFalse
             Add-specialKAutoCompletion -ProfilePath $script:profilePath
-            $global:SpecialKCompleterRan | Should -BeTrue
+            $env:SPECIALK_COMPLETER_RAN | Should -Be 'yes'
         } finally {
-            Remove-Variable SpecialKCompleterRan -Scope Global -ErrorAction Ignore
+            $env:SPECIALK_COMPLETER_RAN = $null
         }
     }
 
