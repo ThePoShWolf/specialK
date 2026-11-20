@@ -1,0 +1,2 @@
+CURRENT   NAME           CLUSTER        AUTHINFO       NAMESPACE
+*         k3s-specialk   k3s-specialk   k3s-specialk   

@@ -1,0 +1,2 @@
+NAME   STATUS   ROLES                  AGE     VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION    CONTAINER-RUNTIME
+vm     Ready    control-plane,master   6m52s   v1.31.4+k3s1   192.0.2.2     <none>        K3s v1.31.4+k3s1   6.18.44-fc-v726   containerd://1.7.23-k3s2

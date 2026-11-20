@@ -1,0 +1,3 @@
+NAME                  READY   STATUS              RESTARTS   AGE
+web-c7d75d445-4mj2r   0/1     ContainerCreating   0          3m9s
+web-c7d75d445-xk9rw   0/1     ContainerCreating   0          3m9s

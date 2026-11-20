@@ -1,0 +1,2 @@
+NAME   STATUS   ROLES                  AGE     VERSION
+vm     Ready    control-plane,master   6m52s   v1.31.4+k3s1

@@ -1,0 +1,7 @@
+NAMESPACE     NAME                                      READY   STATUS              RESTARTS   AGE
+default       web-c7d75d445-4mj2r                       0/1     ContainerCreating   0          3m9s
+default       web-c7d75d445-xk9rw                       0/1     ContainerCreating   0          3m9s
+demo          api-868bc5449c-6bcmr                      0/1     ContainerCreating   0          3m9s
+kube-system   coredns-ccb96694c-56s67                   0/1     ContainerCreating   0          6m45s
+kube-system   local-path-provisioner-5cf85fd84d-zsd6r   0/1     ContainerCreating   0          6m45s
+kube-system   metrics-server-5985cbc9d7-7c79s           0/1     ContainerCreating   0          6m45s

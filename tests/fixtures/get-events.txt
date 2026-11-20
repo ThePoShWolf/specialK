@@ -1,0 +1,22 @@
+LAST SEEN   TYPE      REASON                           OBJECT                     MESSAGE
+6m52s       Normal    Starting                         node/vm                    Starting kubelet.
+6m52s       Warning   CgroupV1                         node/vm                    Cgroup v1 support is in maintenance mode, please migrate to Cgroup v2.
+6m52s       Warning   InvalidDiskCapacity              node/vm                    invalid capacity 0 on image filesystem
+6m52s       Normal    NodeHasSufficientMemory          node/vm                    Node vm status is now: NodeHasSufficientMemory
+6m52s       Normal    NodeHasNoDiskPressure            node/vm                    Node vm status is now: NodeHasNoDiskPressure
+6m52s       Normal    NodeHasSufficientPID             node/vm                    Node vm status is now: NodeHasSufficientPID
+6m52s       Normal    NodeAllocatableEnforced          node/vm                    Updated Node Allocatable limit across pods
+6m51s       Normal    NodeReady                        node/vm                    Node vm status is now: NodeReady
+6m50s       Normal    NodePasswordValidationComplete   node/vm                    Deferred node password secret validation complete
+6m49s       Normal    Starting                         node/vm                    
+6m48s       Normal    Synced                           node/vm                    Node synced successfully
+6m47s       Normal    RegisteredNode                   node/vm                    Node vm event: Registered Node vm in Controller
+112s        Warning   FreeDiskSpaceFailed              node/vm                    Failed to garbage collect required amount of images. Attempted to free 24339505971 bytes, but only found 0 bytes eligible to free.
+112s        Warning   ImageGCFailed                    node/vm                    Failed to garbage collect required amount of images. Attempted to free 24339505971 bytes, but only found 0 bytes eligible to free.
+3m10s       Normal    Scheduled                        pod/web-c7d75d445-4mj2r    Successfully assigned default/web-c7d75d445-4mj2r to vm
+7s          Warning   FailedCreatePodSandBox           pod/web-c7d75d445-4mj2r    Failed to create pod sandbox: rpc error: code = Unknown desc = failed to create containerd task: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: can't get final child's PID from pipe: EOF: unknown
+3m10s       Normal    Scheduled                        pod/web-c7d75d445-xk9rw    Successfully assigned default/web-c7d75d445-xk9rw to vm
+14s         Warning   FailedCreatePodSandBox           pod/web-c7d75d445-xk9rw    Failed to create pod sandbox: rpc error: code = Unknown desc = failed to create containerd task: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: can't get final child's PID from pipe: EOF: unknown
+3m10s       Normal    SuccessfulCreate                 replicaset/web-c7d75d445   Created pod: web-c7d75d445-xk9rw
+3m10s       Normal    SuccessfulCreate                 replicaset/web-c7d75d445   Created pod: web-c7d75d445-4mj2r
+3m10s       Normal    ScalingReplicaSet                deployment/web             Scaled up replica set web-c7d75d445 to 2

@@ -1,0 +1,7 @@
+NAME                                                   DATA   AGE
+cluster-dns                                            2      6m53s
+coredns                                                2      6m51s
+extension-apiserver-authentication                     6      6m55s
+kube-apiserver-legacy-service-account-token-tracking   1      6m55s
+kube-root-ca.crt                                       1      6m48s
+local-path-config                                      4      6m51s
