@@ -70,7 +70,12 @@ class KubectlValue : System.IComparable, System.IConvertible {
             return -1
         }
         if ($mine -is [timespan] -and $theirs -is [timespan]) { return $mine.CompareTo($theirs) }
-        if ($mine -is [timespan] -or $theirs -is [timespan]) { return 1 }
+        # a number against a duration can't be ordered, but the same text is still the same cell: CPU -eq '250m'
+        # reads '250m' as 250 minutes, and must still match the cell kubectl printed as 250m
+        if ($mine -is [timespan] -or $theirs -is [timespan]) {
+            if ([string]::Equals($this.Text, $theirText, [System.StringComparison]::OrdinalIgnoreCase)) { return 0 }
+            return 1
+        }
         $a = 0.0
         $b = 0.0
         if ([double]::TryParse("$mine", [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$a) -and

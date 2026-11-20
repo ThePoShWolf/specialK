@@ -222,6 +222,7 @@ Describe 'KubectlValue in a pipeline' {
         $rows = New-Rows 'CPU(cores)' @('1', '1000m', '250m')
         @($rows | Where-Object 'CPU(cores)' -eq 1000).Count | Should -Be 2
         @($rows | Where-Object 'CPU(cores)' -eq 1).Count | Should -Be 0
+        @($rows | Where-Object 'CPU(cores)' -eq '250m').Count | Should -Be 1
         # the same quantity written two ways is one group
         @($rows | Group-Object 'CPU(cores)').Count | Should -Be 2
         # equal values hash alike, whatever their numeric type
