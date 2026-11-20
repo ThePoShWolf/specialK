@@ -70,6 +70,25 @@ Describe 'format file generation' {
         $top | Should -Contain 'CPU(cores)'
     }
 
+    It 'has a view for every type name k can emit for every entry in formats.json' {
+        # k emits <verb>-<resource>, plus -wide (get only) and -ns (namespaced resources) variants
+        $commands = Get-Content (Join-Path $script:RepoRoot 'src' 'formats.json') -Raw | ConvertFrom-Json -AsHashtable
+        $views = @($script:xml.Configuration.ViewDefinitions.View.Name)
+        $notNamespaced = 'namespace', 'node'
+        $emittable = foreach ($verb in $commands.Keys) {
+            foreach ($resource in $commands[$verb]) {
+                "$verb-$resource"
+                $namespaced = $verb -ne 'config' -and $notNamespaced -notcontains $resource
+                if ($verb -eq 'get') { "$verb-$resource-wide" }
+                if ($namespaced) { "$verb-$resource-ns" }
+                if ($verb -eq 'get' -and $namespaced) { "$verb-$resource-ns-wide" }
+            }
+        }
+        $emittable.Count | Should -BeGreaterThan 10
+        $missing = @($emittable | Where-Object { $views -notcontains $_ })
+        $missing | Should -BeNullOrEmpty -Because "k would stamp these type names but no view formats them: $($missing -join ', ')"
+    }
+
     It 'is deterministic' {
         $again = Join-Path $script:work 'gen2' 'k.format.ps1xml'
         & $script:generator -OutPath $again 6>$null
