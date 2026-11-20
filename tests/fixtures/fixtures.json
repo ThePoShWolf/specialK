@@ -1,0 +1,379 @@
+{
+  "fixtures": [
+    {
+      "name": "get-pod",
+      "file": "get-pod.txt",
+      "args": [
+        "get",
+        "pod"
+      ],
+      "source": "captured",
+      "typeName": "get-pod"
+    },
+    {
+      "name": "get-pod-wide",
+      "file": "get-pod-wide.txt",
+      "args": [
+        "get",
+        "pod",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-pod-wide"
+    },
+    {
+      "name": "get-pod-ns",
+      "file": "get-pod-ns.txt",
+      "args": [
+        "get",
+        "pod",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-pod-ns"
+    },
+    {
+      "name": "get-pod-ns-wide",
+      "file": "get-pod-ns-wide.txt",
+      "args": [
+        "get",
+        "pod",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-pod-ns-wide"
+    },
+    {
+      "name": "get-deployment",
+      "file": "get-deployment.txt",
+      "args": [
+        "get",
+        "deployment"
+      ],
+      "source": "captured",
+      "typeName": "get-deployment"
+    },
+    {
+      "name": "get-deployment-wide",
+      "file": "get-deployment-wide.txt",
+      "args": [
+        "get",
+        "deployment",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-deployment-wide"
+    },
+    {
+      "name": "get-deployment-ns",
+      "file": "get-deployment-ns.txt",
+      "args": [
+        "get",
+        "deployment",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-deployment-ns"
+    },
+    {
+      "name": "get-deployment-ns-wide",
+      "file": "get-deployment-ns-wide.txt",
+      "args": [
+        "get",
+        "deployment",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-deployment-ns-wide"
+    },
+    {
+      "name": "get-service",
+      "file": "get-service.txt",
+      "args": [
+        "get",
+        "service"
+      ],
+      "source": "captured",
+      "typeName": "get-service"
+    },
+    {
+      "name": "get-service-wide",
+      "file": "get-service-wide.txt",
+      "args": [
+        "get",
+        "service",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-service-wide"
+    },
+    {
+      "name": "get-service-ns",
+      "file": "get-service-ns.txt",
+      "args": [
+        "get",
+        "service",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-service-ns"
+    },
+    {
+      "name": "get-service-ns-wide",
+      "file": "get-service-ns-wide.txt",
+      "args": [
+        "get",
+        "service",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-service-ns-wide"
+    },
+    {
+      "name": "get-namespace",
+      "file": "get-namespace.txt",
+      "args": [
+        "get",
+        "namespace"
+      ],
+      "source": "captured",
+      "typeName": "get-namespace"
+    },
+    {
+      "name": "get-namespace-wide",
+      "file": "get-namespace-wide.txt",
+      "args": [
+        "get",
+        "namespace",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-namespace-wide"
+    },
+    {
+      "name": "get-node",
+      "file": "get-node.txt",
+      "args": [
+        "get",
+        "node"
+      ],
+      "source": "captured",
+      "typeName": "get-node"
+    },
+    {
+      "name": "get-node-wide",
+      "file": "get-node-wide.txt",
+      "args": [
+        "get",
+        "node",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-node-wide"
+    },
+    {
+      "name": "get-events",
+      "file": "get-events.txt",
+      "args": [
+        "get",
+        "events"
+      ],
+      "source": "captured",
+      "typeName": "get-events"
+    },
+    {
+      "name": "get-events-wide",
+      "file": "get-events-wide.txt",
+      "args": [
+        "get",
+        "events",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-events-wide"
+    },
+    {
+      "name": "get-events-ns",
+      "file": "get-events-ns.txt",
+      "args": [
+        "get",
+        "events",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": "get-events-ns"
+    },
+    {
+      "name": "get-events-ns-wide",
+      "file": "get-events-ns-wide.txt",
+      "args": [
+        "get",
+        "events",
+        "-A",
+        "-o",
+        "wide"
+      ],
+      "source": "captured",
+      "typeName": "get-events-ns-wide"
+    },
+    {
+      "name": "get-deployment-by-name",
+      "file": "get-deployment-by-name.txt",
+      "args": [
+        "get",
+        "deployment",
+        "web"
+      ],
+      "source": "captured",
+      "typeName": "get-deployment"
+    },
+    {
+      "name": "get-deployment-slash",
+      "file": "get-deployment-slash.txt",
+      "args": [
+        "get",
+        "deployment/web"
+      ],
+      "source": "captured",
+      "typeName": "get-deployment"
+    },
+    {
+      "name": "config-get-contexts",
+      "file": "config-get-contexts.txt",
+      "args": [
+        "config",
+        "get-contexts"
+      ],
+      "source": "captured",
+      "typeName": "config-get-contexts"
+    },
+    {
+      "name": "config-get-clusters",
+      "file": "config-get-clusters.txt",
+      "args": [
+        "config",
+        "get-clusters"
+      ],
+      "source": "captured",
+      "typeName": "config-get-clusters"
+    },
+    {
+      "name": "config-get-users",
+      "file": "config-get-users.txt",
+      "args": [
+        "config",
+        "get-users"
+      ],
+      "source": "captured",
+      "typeName": "config-get-users"
+    },
+    {
+      "name": "get-pod-empty",
+      "file": "get-pod-empty.txt",
+      "args": [
+        "get",
+        "pod",
+        "-n",
+        "kube-public"
+      ],
+      "source": "captured",
+      "typeName": null,
+      "allowEmpty": true
+    },
+    {
+      "name": "get-secrets-ns",
+      "file": "get-secrets-ns.txt",
+      "args": [
+        "get",
+        "secrets",
+        "-A"
+      ],
+      "source": "captured",
+      "typeName": null
+    },
+    {
+      "name": "get-configmap",
+      "file": "get-configmap.txt",
+      "args": [
+        "get",
+        "configmap",
+        "-n",
+        "kube-system"
+      ],
+      "source": "captured",
+      "typeName": null
+    },
+    {
+      "name": "get-namespace-json",
+      "file": "get-namespace-json.txt",
+      "args": [
+        "get",
+        "namespace",
+        "default",
+        "-o",
+        "json"
+      ],
+      "source": "captured",
+      "typeName": null
+    },
+    {
+      "name": "get-service-yaml",
+      "file": "get-service-yaml.txt",
+      "args": [
+        "get",
+        "service",
+        "web",
+        "-o",
+        "yaml"
+      ],
+      "source": "captured",
+      "typeName": null
+    },
+    {
+      "name": "top-pod",
+      "file": "top-pod.txt",
+      "args": [
+        "top",
+        "pod"
+      ],
+      "source": "hand-written",
+      "typeName": "top-pod",
+      "metrics": true
+    },
+    {
+      "name": "top-pod-ns",
+      "file": "top-pod-ns.txt",
+      "args": [
+        "top",
+        "pod",
+        "-A"
+      ],
+      "source": "hand-written",
+      "typeName": "top-pod-ns",
+      "metrics": true
+    },
+    {
+      "name": "top-node",
+      "file": "top-node.txt",
+      "args": [
+        "top",
+        "node"
+      ],
+      "source": "hand-written",
+      "typeName": "top-node",
+      "metrics": true
+    }
+  ]
+}
