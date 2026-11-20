@@ -1,5 +1,6 @@
 param (
-    [version]$Version = '0.0.1',
+    # Defaults to ModuleVersion in src/specialK.psd1, the one place the version is set.
+    [version]$Version = (Import-PowerShellDataFile (Join-Path $PSScriptRoot 'src' 'specialK.psd1')).ModuleVersion,
     [string]$NugetApiKey,
     [string]$PreRelease,
     # Where the built module goes. Defaults to ./build/<module>.
@@ -85,6 +86,14 @@ task ModuleBuild Clean, {
     $moduleManifestData = Invoke-Command -ScriptBlock ([scriptblock]::create((Get-Content $manifestPath -Raw))) -NoNewScope
     foreach ($key in $moduleManifestData['PrivateData']['PSData'].Keys) {
         $moduleManifestData[$key] = $moduleManifestData['PrivateData']['PSData'][$key]
+    }
+
+    # Update-ModuleManifest rejects empty arrays (CmdletsToExport = @() and friends) as parameters, so drop them from
+    # the splat; the copied manifest already holds them and Update-ModuleManifest leaves what it is not given alone.
+    foreach ($key in @($moduleManifestData.Keys)) {
+        if ($moduleManifestData[$key] -is [array] -and $moduleManifestData[$key].Count -eq 0) {
+            $moduleManifestData.Remove($key)
+        }
     }
 
     # update

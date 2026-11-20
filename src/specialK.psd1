@@ -12,10 +12,10 @@
     RootModule        = 'specialK.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '0.0.1'
+    ModuleVersion     = '0.5.0'
 
     # Supported PSEditions
-    # CompatiblePSEditions = @()
+    CompatiblePSEditions = @('Core')
 
     # ID used to uniquely identify this module
     GUID              = 'c88c1dd6-1d8d-40bc-8427-ffb7786c5f5d'
@@ -69,16 +69,16 @@
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = '*'
+    FunctionsToExport = @('k', 'Add-specialKAutoCompletion')
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport   = '*'
+    CmdletsToExport   = @()
 
     # Variables to export from this module
-    VariablesToExport = '*'
+    VariablesToExport = @()
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-    AliasesToExport   = '*'
+    AliasesToExport   = @()
 
     # DSC resources to export from this module
     # DscResourcesToExport = @()
@@ -95,7 +95,7 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags       = @('kubernetes', 'kubectl', 'k8s')
+            Tags       = @('kubernetes', 'kubectl', 'k8s', 'objects', 'PSEdition_Core', 'Windows', 'Linux', 'MacOS')
 
             # A URL to the license for this module.
             LicenseUri = 'https://github.com/ThePoShWolf/specialK/blob/main/LICENSE'
@@ -107,7 +107,7 @@
             # IconUri = ''
 
             # ReleaseNotes of this module
-            # ReleaseNotes = ''
+            ReleaseNotes = 'https://github.com/ThePoShWolf/specialK/blob/main/CHANGELOG.md'
 
             # Prerelease string of this module
             # Prerelease = ''

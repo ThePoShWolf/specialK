@@ -158,3 +158,50 @@ Describe 'ModuleBuild output' {
         $result.Views | Should -Contain 'config-get-contexts'
     }
 }
+
+Describe 'manifest' {
+    BeforeAll {
+        $script:sourceManifest = Import-PowerShellDataFile (Join-Path $script:RepoRoot 'src' 'specialK.psd1')
+        $script:publicFunctions = @(Get-ChildItem (Join-Path $script:RepoRoot 'src' 'public') -Filter *.ps1 | ForEach-Object BaseName)
+        $buildFile = Join-Path $script:RepoRoot 'specialK.build.ps1'
+
+        function Invoke-TestBuild {
+            param([string]$Name, [string]$ExtraArgs = '')
+            $dir = Join-Path $script:work $Name
+            $null = & $script:pwsh -NoProfile -NonInteractive -c "Invoke-Build ModuleBuild -File '$buildFile' -BuildPath '$dir' $ExtraArgs *>&1 | Out-String"
+            $LASTEXITCODE | Should -Be 0
+            Import-PowerShellDataFile (Join-Path $dir 'specialK' 'specialK.psd1')
+        }
+    }
+
+    It 'lists its exports explicitly in the source manifest' {
+        $script:sourceManifest.FunctionsToExport | Should -Be @('k', 'Add-specialKAutoCompletion')
+        $script:sourceManifest.CmdletsToExport | Should -BeNullOrEmpty
+        $script:sourceManifest.VariablesToExport | Should -BeNullOrEmpty
+        $script:sourceManifest.AliasesToExport | Should -BeNullOrEmpty
+        $script:sourceManifest.CompatiblePSEditions | Should -Be @('Core')
+    }
+
+    It 'exports exactly the public functions' {
+        $script:sourceManifest.FunctionsToExport | Sort-Object | Should -Be ($script:publicFunctions | Sort-Object)
+    }
+
+    It 'builds with the explicit exports and the source version' {
+        $built = Invoke-TestBuild 'manifest-default'
+        $built.FunctionsToExport | Sort-Object | Should -Be ($script:publicFunctions | Sort-Object)
+        $built.CmdletsToExport | Should -BeNullOrEmpty
+        $built.VariablesToExport | Should -BeNullOrEmpty
+        $built.AliasesToExport | Should -BeNullOrEmpty
+        $built.ModuleVersion | Should -Be $script:sourceManifest.ModuleVersion
+        $built.CompatiblePSEditions | Should -Be @('Core')
+        $built.PrivateData.PSData.ReleaseNotes | Should -Match 'CHANGELOG\.md$'
+        $built.PrivateData.PSData.Tags | Should -Contain 'PSEdition_Core'
+        $built.PrivateData.PSData.ContainsKey('Prerelease') | Should -BeFalse
+    }
+
+    It 'honours -Version and sets the prerelease label from -PreRelease' {
+        $built = Invoke-TestBuild 'manifest-pre' "-Version 1.2.3 -PreRelease preview0042"
+        $built.ModuleVersion | Should -Be '1.2.3'
+        $built.PrivateData.PSData.Prerelease | Should -Be 'preview0042'
+    }
+}
