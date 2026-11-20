@@ -61,6 +61,22 @@ Describe 'Add-specialKAutoCompletion, offline' {
         Test-Path (Split-Path $script:profilePath) | Should -BeFalse
     }
 
+    It 'registers nothing with -WhatIf, with or without -ToProfile' {
+        # the fake completer registers for 'kubectl'; the function rewrites it to 'k'
+        Set-FakeKubectl -Arguments 'completion', 'powershell' -Text "`$global:SpecialKCompleterRan = `$true"
+        $global:SpecialKCompleterRan = $false
+        try {
+            Add-specialKAutoCompletion -ProfilePath $script:profilePath -WhatIf
+            Add-specialKAutoCompletion -ToProfile -ProfilePath $script:profilePath -WhatIf
+            $global:SpecialKCompleterRan | Should -BeFalse
+            Test-Path $script:profilePath | Should -BeFalse
+            Add-specialKAutoCompletion -ProfilePath $script:profilePath
+            $global:SpecialKCompleterRan | Should -BeTrue
+        } finally {
+            Remove-Variable SpecialKCompleterRan -Scope Global -ErrorAction Ignore
+        }
+    }
+
     It 'warns about an old static snapshot and leaves it untouched' {
         New-Item (Split-Path $script:profilePath) -ItemType Directory | Out-Null
         $old = "$script:completer".Replace("'kubectl'", "'k'")

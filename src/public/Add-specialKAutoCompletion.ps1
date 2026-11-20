@@ -14,7 +14,7 @@ Function Add-specialKAutoCompletion {
         throw $argCompleter
     }
 
-    if ($null -ne $argCompleter) {
+    if ($null -ne $argCompleter -and $PSCmdlet.ShouldProcess('k', 'Register the kubectl argument completer')) {
         $argCompleter | Out-String | Invoke-Expression
     }
 
