@@ -1,0 +1,2 @@
+NAME   READY   AGE   CONTAINERS   IMAGES
+db     0/1     34s   db           registry.k8s.io/pause:3.10

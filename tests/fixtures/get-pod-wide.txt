@@ -1,0 +1,3 @@
+NAME                  READY   STATUS              RESTARTS   AGE    IP       NODE   NOMINATED NODE   READINESS GATES
+web-c7d75d445-4mj2r   0/1     ContainerCreating   0          3m9s   <none>   vm     <none>           <none>
+web-c7d75d445-xk9rw   0/1     ContainerCreating   0          3m9s   <none>   vm     <none>           <none>

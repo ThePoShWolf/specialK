@@ -1,0 +1,2 @@
+NAME   STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data   Pending                                      local-path     <unset>                 33s

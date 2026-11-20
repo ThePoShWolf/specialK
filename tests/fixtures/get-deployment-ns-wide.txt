@@ -1,0 +1,6 @@
+NAMESPACE     NAME                     READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS               IMAGES                                    SELECTOR
+default       web                      0/2     2            0           3m10s   nginx                    nginx:1.27                                app=web
+demo          api                      0/1     1            0           3m10s   busybox                  busybox:1.36                              app=api
+kube-system   coredns                  0/1     1            0           6m50s   coredns                  rancher/mirrored-coredns-coredns:1.12.0   k8s-app=kube-dns
+kube-system   local-path-provisioner   0/1     1            0           6m50s   local-path-provisioner   rancher/local-path-provisioner:v0.0.30    app=local-path-provisioner
+kube-system   metrics-server           0/1     1            0           6m50s   metrics-server           rancher/mirrored-metrics-server:v0.7.2    k8s-app=metrics-server

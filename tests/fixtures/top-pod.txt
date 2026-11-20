@@ -1,0 +1,3 @@
+NAME                  CPU(cores)   MEMORY(bytes)   
+web-c7d75d445-4mj2r   1m           12Mi            
+web-c7d75d445-xk9rw   2m           13Mi            

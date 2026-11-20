@@ -1,0 +1,3 @@
+NAMESPACE   NAME    STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+default     data    Pending                                      local-path     <unset>                 33s
+demo        cache   Pending                                      local-path     <unset>                 33s

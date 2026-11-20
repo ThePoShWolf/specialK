@@ -1,0 +1,3 @@
+NAMESPACE   NAME      STATUS    COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                       SELECTOR
+default     migrate   Running   0/1           34s        34s   m            registry.k8s.io/pause:3.10   batch.kubernetes.io/controller-uid=97b8806c-f470-42fb-94d5-d814d66ef2da
+demo        seed      Running   0/2           34s        34s   s            registry.k8s.io/pause:3.10   batch.kubernetes.io/controller-uid=ac1838cb-22b6-4661-a765-b3ce3309ef00

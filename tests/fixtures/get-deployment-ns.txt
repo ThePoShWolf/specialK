@@ -1,0 +1,6 @@
+NAMESPACE     NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
+default       web                      0/2     2            0           3m10s
+demo          api                      0/1     1            0           3m10s
+kube-system   coredns                  0/1     1            0           6m50s
+kube-system   local-path-provisioner   0/1     1            0           6m50s
+kube-system   metrics-server           0/1     1            0           6m50s

@@ -1,0 +1,5 @@
+NAMESPACE     NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                  AGE     SELECTOR
+default       kubernetes       ClusterIP   10.43.0.1       <none>        443/TCP                  6m53s   <none>
+default       web              ClusterIP   10.43.19.211    <none>        80/TCP                   3m10s   app=web
+kube-system   kube-dns         ClusterIP   10.43.0.10      <none>        53/UDP,53/TCP,9153/TCP   6m50s   k8s-app=kube-dns
+kube-system   metrics-server   ClusterIP   10.43.233.130   <none>        443/TCP                  6m50s   k8s-app=metrics-server

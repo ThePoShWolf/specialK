@@ -1,0 +1,2 @@
+NAME   CLASS    HOSTS              ADDRESS   PORTS   AGE
+web    <none>   web.example.test             80      33s

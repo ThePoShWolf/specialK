@@ -1,0 +1,314 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+# A newer run for the same ref supersedes the one in progress, except on main: a half-finished release is worse than
+# a late one, so runs on main queue up and finish.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  # Names the built module artifact after the run and the commit so it is obvious where it came from.
+  MODULE_ARTIFACT: specialK-module-run${{ github.run_number }}-${{ github.sha }}
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  # Fast check on PRs into main: catches a forgotten version bump or changelog entry before the merge, not after it.
+  release-guard:
+    name: Release guard (version bumped, changelog written)
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the version
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $info = ./repoScripts/Get-ReleaseInfo.ps1
+          Write-Output "Version in src/specialK.psd1: $($info.Version) (tag $($info.Tag))"
+          $failed = $false
+          # without --exit-code a missing tag is exit 0 with no output; only a real lookup error is non-zero
+          $remoteTag = git ls-remote --tags origin "refs/tags/$($info.Tag)"
+          if ($LASTEXITCODE -ne 0) { throw "Could not look up tag $($info.Tag) on origin." }
+          if ($remoteTag) {
+            Write-Output "::error title=Version not bumped::Tag $($info.Tag) already exists. Bump ModuleVersion in src/specialK.psd1 before merging to main."
+            $failed = $true
+          }
+          if (-not $info.HasChangelogSection) {
+            Write-Output "::error title=No changelog entry::CHANGELOG.md has no section for $($info.Version). Add a '## $($info.Version)' section."
+            $failed = $true
+          }
+          if ($failed) { exit 1 }
+
+  lint:
+    name: Lint (PSScriptAnalyzer)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache PowerShell modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/powershell/Modules
+          key: psmodules-lint-${{ runner.os }}-${{ hashFiles('repoScripts/Install-BuildDependency.ps1') }}
+
+      - name: Install PSScriptAnalyzer
+        run: ./repoScripts/Install-BuildDependency.ps1 -Name PSScriptAnalyzer
+
+      - name: Analyze
+        run: ./repoScripts/Invoke-Lint.ps1
+
+  test:
+    name: Build and unit tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache PowerShell modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/powershell/Modules
+            ~/Documents/PowerShell/Modules
+          key: psmodules-test-${{ runner.os }}-${{ hashFiles('repoScripts/Install-BuildDependency.ps1') }}
+
+      - name: Install InvokeBuild and Pester
+        run: ./repoScripts/Install-BuildDependency.ps1 -Name InvokeBuild, Pester
+
+      - name: Build the module
+        run: Invoke-Build ModuleBuild
+
+      - name: Unit tests
+        run: Invoke-Build Test -TestResultPath ./testResults/unit-${{ matrix.os }}.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results-${{ matrix.os }}
+          path: testResults/*.xml
+          if-no-files-found: warn
+
+      - name: Upload built module
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.MODULE_ARTIFACT }}
+          path: build/specialK
+          if-no-files-found: error
+
+  smoke:
+    name: Smoke test (Kubernetes ${{ matrix.kubernetes }})
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        # Node images published for the pinned kind release (kind v0.30.0); kubectl client matches the cluster.
+        kubernetes: [v1.32.8, v1.33.4, v1.34.0]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache PowerShell modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/powershell/Modules
+          key: psmodules-smoke-${{ runner.os }}-${{ hashFiles('repoScripts/Install-BuildDependency.ps1') }}
+
+      - name: Install InvokeBuild and Pester
+        run: ./repoScripts/Install-BuildDependency.ps1 -Name InvokeBuild, Pester
+
+      - name: Download the built module
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.MODULE_ARTIFACT }}
+          path: build/specialK
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+        with:
+          version: v0.30.0
+          node_image: kindest/node:${{ matrix.kubernetes }}
+          kubectl_version: ${{ matrix.kubernetes }}
+          cluster_name: specialk-smoke
+
+      - name: Show cluster and kubectl versions
+        run: kubectl version
+
+      - name: Install metrics-server
+        run: |
+          $ErrorActionPreference = 'Stop'
+          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/components.yaml
+          if ($LASTEXITCODE -ne 0) { throw 'Could not apply the metrics-server manifest.' }
+          # kind's kubelets use self-signed certificates
+          kubectl patch deployment metrics-server -n kube-system --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+          if ($LASTEXITCODE -ne 0) { throw 'Could not patch metrics-server with --kubelet-insecure-tls.' }
+          kubectl rollout status deployment/metrics-server -n kube-system --timeout=180s
+          if ($LASTEXITCODE -ne 0) { throw 'metrics-server did not become ready within 180s.' }
+          $deadline = (Get-Date).AddSeconds(180)
+          do {
+            kubectl top node *> $null
+            if ($LASTEXITCODE -eq 0) { Write-Output 'Metrics API is serving.'; return }
+            Start-Sleep -Seconds 5
+          } while ((Get-Date) -lt $deadline)
+          throw 'The Metrics API did not start serving node metrics within 180s.'
+
+      - name: Smoke test
+        run: Invoke-Build SmokeTest -TestResultPath ./testResults/smoke-${{ matrix.kubernetes }}.xml
+
+      - name: Cluster state on failure
+        if: failure()
+        run: |
+          kubectl get pods -A -o wide
+          kubectl get events -A --sort-by=.lastTimestamp
+          kubectl top node
+          kubectl logs -n kube-system deployment/metrics-server --tail=50
+
+      - name: Upload smoke test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-results-${{ matrix.kubernetes }}
+          path: testResults/*.xml
+          if-no-files-found: warn
+
+  # dev: publish a prerelease to the PowerShell Gallery so it can be tried on a real cluster before it reaches main.
+  #   Install-PSResource specialK -Prerelease        (or: Install-Module specialK -AllowPrerelease)
+  preview:
+    name: Publish preview build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    needs: [lint, test, smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache PowerShell modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/powershell/Modules
+          key: psmodules-publish-${{ runner.os }}-${{ hashFiles('repoScripts/Install-BuildDependency.ps1') }}
+
+      - name: Install InvokeBuild
+        run: ./repoScripts/Install-BuildDependency.ps1 -Name InvokeBuild
+
+      # Prerelease labels may only be alphanumeric; zero-padding the run number keeps them sorting in order.
+      - name: Build the preview
+        run: |
+          $label = 'preview{0:D4}' -f [int]$env:GITHUB_RUN_NUMBER
+          "PREVIEW_LABEL=$label" >> $env:GITHUB_ENV
+          Invoke-Build ModuleBuild -PreRelease $label
+
+      - name: Publish to the PowerShell Gallery
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          if (-not $env:PSGALLERY_API_KEY) {
+            Write-Output '::warning title=Preview not published::The PSGALLERY_API_KEY repository secret is not set, so no preview was published.'
+            return
+          }
+          Invoke-Build PublishBuilt
+          $version = (Import-PowerShellDataFile build/specialK/specialK.psd1).ModuleVersion
+          "Preview ${version}-$($env:PREVIEW_LABEL) published. Install it with: ``Install-PSResource specialK -Prerelease``" >> $env:GITHUB_STEP_SUMMARY
+
+  # main: publish the real release, then tag it and create the GitHub Release from the CHANGELOG section.
+  release:
+    name: Publish release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [lint, test, smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decide whether to release
+        id: decide
+        env:
+          HAS_API_KEY: ${{ secrets.PSGALLERY_API_KEY != '' }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $info = ./repoScripts/Get-ReleaseInfo.ps1
+          "version=$($info.Version)" >> $env:GITHUB_OUTPUT
+          "tag=$($info.Tag)" >> $env:GITHUB_OUTPUT
+          $release = 'true'
+          # without --exit-code a missing tag is exit 0 with no output; only a real lookup error is non-zero
+          $remoteTag = git ls-remote --tags origin "refs/tags/$($info.Tag)"
+          if ($LASTEXITCODE -ne 0) { throw "Could not look up tag $($info.Tag) on origin." }
+          if ($remoteTag) {
+            Write-Output "::notice title=No release::Tag $($info.Tag) already exists, so there is nothing to release. Bump ModuleVersion in src/specialK.psd1 to release again."
+            $release = 'false'
+          }
+          elseif (-not $info.HasChangelogSection) {
+            Write-Output "::error title=No changelog entry::CHANGELOG.md has no section for $($info.Version)."
+            exit 1
+          }
+          elseif ($env:HAS_API_KEY -ne 'true') {
+            Write-Output "::warning title=Not released::The PSGALLERY_API_KEY repository secret is not set, so $($info.Tag) was neither published nor tagged."
+            $release = 'false'
+          }
+          "release=$release" >> $env:GITHUB_OUTPUT
+
+      - name: Cache PowerShell modules
+        if: steps.decide.outputs.release == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/powershell/Modules
+          key: psmodules-publish-${{ runner.os }}-${{ hashFiles('repoScripts/Install-BuildDependency.ps1') }}
+
+      - name: Install InvokeBuild
+        if: steps.decide.outputs.release == 'true'
+        run: ./repoScripts/Install-BuildDependency.ps1 -Name InvokeBuild
+
+      - name: Build the release
+        if: steps.decide.outputs.release == 'true'
+        run: Invoke-Build ModuleBuild
+
+      - name: Publish to the PowerShell Gallery
+        if: steps.decide.outputs.release == 'true'
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # A rerun after a failed tag/release step finds the version already on the Gallery. Publishing it again
+          # would fail before the GitHub Release is created, so skip straight to the tag step.
+          $version = '${{ steps.decide.outputs.version }}'
+          $found = Find-PSResource -Name specialK -Version $version -Repository PSGallery -ErrorAction SilentlyContinue
+          if ($found) {
+            Write-Output "::notice title=Already published::specialK $version is already on the PowerShell Gallery, so it is not published again."
+            return
+          }
+          Invoke-Build PublishBuilt
+
+      - name: Tag and create the GitHub Release
+        if: steps.decide.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $notes = Join-Path $env:RUNNER_TEMP 'release-notes.md'
+          ./repoScripts/Get-ReleaseInfo.ps1 -NotesOnly | Set-Content -Path $notes
+          gh release create '${{ steps.decide.outputs.tag }}' --target $env:GITHUB_SHA --title '${{ steps.decide.outputs.tag }}' --notes-file $notes
+          if ($LASTEXITCODE -ne 0) { throw 'gh release create failed.' }
+          "Released ${{ steps.decide.outputs.tag }}." >> $env:GITHUB_STEP_SUMMARY
