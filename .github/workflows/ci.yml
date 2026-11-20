@@ -7,10 +7,11 @@ on:
     branches: [dev, main]
   workflow_dispatch:
 
-# A newer run for the same ref supersedes the one in progress.
+# A newer run for the same ref supersedes the one in progress, except on main: a half-finished release is worse than
+# a late one, so runs on main queue up and finish.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -24,6 +25,32 @@ defaults:
     shell: pwsh
 
 jobs:
+  # Fast check on PRs into main: catches a forgotten version bump or changelog entry before the merge, not after it.
+  release-guard:
+    name: Release guard (version bumped, changelog written)
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the version
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $info = ./repoScripts/Get-ReleaseInfo.ps1
+          Write-Output "Version in src/specialK.psd1: $($info.Version) (tag $($info.Tag))"
+          $failed = $false
+          git ls-remote --exit-code --tags origin "refs/tags/$($info.Tag)" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Output "::error title=Version not bumped::Tag $($info.Tag) already exists. Bump ModuleVersion in src/specialK.psd1 before merging to main."
+            $failed = $true
+          }
+          if (-not $info.HasChangelogSection) {
+            Write-Output "::error title=No changelog entry::CHANGELOG.md has no section for $($info.Version). Add a '## $($info.Version)' section."
+            $failed = $true
+          }
+          if ($failed) { exit 1 }
+
   lint:
     name: Lint (PSScriptAnalyzer)
     runs-on: ubuntu-latest
@@ -162,3 +189,112 @@ jobs:
           name: smoke-test-results-${{ matrix.kubernetes }}
           path: testResults/*.xml
           if-no-files-found: warn
+
+  # dev: publish a prerelease to the PowerShell Gallery so it can be tried on a real cluster before it reaches main.
+  #   Install-PSResource specialK -Prerelease        (or: Install-Module specialK -AllowPrerelease)
+  preview:
+    name: Publish preview build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    needs: [lint, test, smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache PowerShell modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/powershell/Modules
+          key: psmodules-publish-${{ runner.os }}-${{ hashFiles('repoScripts/Install-BuildDependency.ps1') }}
+
+      - name: Install InvokeBuild
+        run: ./repoScripts/Install-BuildDependency.ps1 -Name InvokeBuild
+
+      # Prerelease labels may only be alphanumeric; zero-padding the run number keeps them sorting in order.
+      - name: Build the preview
+        run: |
+          $label = 'preview{0:D4}' -f [int]$env:GITHUB_RUN_NUMBER
+          "PREVIEW_LABEL=$label" >> $env:GITHUB_ENV
+          Invoke-Build ModuleBuild -PreRelease $label
+
+      - name: Publish to the PowerShell Gallery
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          if (-not $env:PSGALLERY_API_KEY) {
+            Write-Output '::warning title=Preview not published::The PSGALLERY_API_KEY repository secret is not set, so no preview was published.'
+            return
+          }
+          Invoke-Build PublishBuilt
+          $version = (Import-PowerShellDataFile build/specialK/specialK.psd1).ModuleVersion
+          "Preview ${version}-$($env:PREVIEW_LABEL) published. Install it with: ``Install-PSResource specialK -Prerelease``" >> $env:GITHUB_STEP_SUMMARY
+
+  # main: publish the real release, then tag it and create the GitHub Release from the CHANGELOG section.
+  release:
+    name: Publish release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [lint, test, smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decide whether to release
+        id: decide
+        env:
+          HAS_API_KEY: ${{ secrets.PSGALLERY_API_KEY != '' }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $info = ./repoScripts/Get-ReleaseInfo.ps1
+          "version=$($info.Version)" >> $env:GITHUB_OUTPUT
+          "tag=$($info.Tag)" >> $env:GITHUB_OUTPUT
+          $release = 'true'
+          git ls-remote --exit-code --tags origin "refs/tags/$($info.Tag)" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Output "::notice title=No release::Tag $($info.Tag) already exists, so there is nothing to release. Bump ModuleVersion in src/specialK.psd1 to release again."
+            $release = 'false'
+          }
+          elseif (-not $info.HasChangelogSection) {
+            Write-Output "::error title=No changelog entry::CHANGELOG.md has no section for $($info.Version)."
+            exit 1
+          }
+          elseif ($env:HAS_API_KEY -ne 'true') {
+            Write-Output "::warning title=Not released::The PSGALLERY_API_KEY repository secret is not set, so $($info.Tag) was neither published nor tagged."
+            $release = 'false'
+          }
+          "release=$release" >> $env:GITHUB_OUTPUT
+
+      - name: Cache PowerShell modules
+        if: steps.decide.outputs.release == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/powershell/Modules
+          key: psmodules-publish-${{ runner.os }}-${{ hashFiles('repoScripts/Install-BuildDependency.ps1') }}
+
+      - name: Install InvokeBuild
+        if: steps.decide.outputs.release == 'true'
+        run: ./repoScripts/Install-BuildDependency.ps1 -Name InvokeBuild
+
+      - name: Build the release
+        if: steps.decide.outputs.release == 'true'
+        run: Invoke-Build ModuleBuild
+
+      - name: Publish to the PowerShell Gallery
+        if: steps.decide.outputs.release == 'true'
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: Invoke-Build PublishBuilt
+
+      - name: Tag and create the GitHub Release
+        if: steps.decide.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $notes = Join-Path $env:RUNNER_TEMP 'release-notes.md'
+          ./repoScripts/Get-ReleaseInfo.ps1 -NotesOnly | Set-Content -Path $notes
+          gh release create '${{ steps.decide.outputs.tag }}' --target $env:GITHUB_SHA --title '${{ steps.decide.outputs.tag }}' --notes-file $notes
+          if ($LASTEXITCODE -ne 0) { throw 'gh release create failed.' }
+          "Released ${{ steps.decide.outputs.tag }}." >> $env:GITHUB_STEP_SUMMARY
