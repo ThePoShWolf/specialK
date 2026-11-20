@@ -57,6 +57,21 @@ Describe 'Get-ReleaseInfo' {
         { & $script:script -ManifestPath $script:manifest -ChangelogPath $script:changelog -Version 1.2 } | Should -Throw '*MAJOR.MINOR.PATCH*'
     }
 
+    It 'treats a heading directly followed by the next heading as having no notes' {
+        $path = Join-Path $script:work 'empty-middle.md'
+        [System.IO.File]::WriteAllText($path, "# Changelog`r`n`r`n## 1.2.3`r`n## 1.2.2`r`n`r`n- older`r`n")
+        $info = & $script:script -ManifestPath $script:manifest -ChangelogPath $path
+        $info.HasChangelogSection | Should -BeFalse
+        $info.Notes | Should -BeNullOrEmpty
+    }
+
+    It 'treats a heading on the last line as having no notes' {
+        $path = Join-Path $script:work 'empty-last.md'
+        [System.IO.File]::WriteAllText($path, "# Changelog`r`n`r`n## 1.2.3")
+        (& $script:script -ManifestPath $script:manifest -ChangelogPath $path).HasChangelogSection | Should -BeFalse
+        { & $script:script -ManifestPath $script:manifest -ChangelogPath $path -NotesOnly } | Should -Throw '*no section*'
+    }
+
     It 'reads the real manifest' {
         $info = & $script:script
         $info.Version | Should -Be (Import-PowerShellDataFile (Join-Path $script:RepoRoot 'src' 'specialK.psd1')).ModuleVersion

@@ -52,9 +52,12 @@ if (Test-Path $ChangelogPath) {
                 break
             }
         }
-        $body = ($lines[($start + 1)..($end - 1)] -join "`n").Trim()
-        if ($body) {
-            $notes = $body
+        # a heading followed straight by the next heading (or the end) has no lines to slice
+        if ($end -gt $start + 1) {
+            $body = ($lines[($start + 1)..($end - 1)] -join "`n").Trim()
+            if ($body) {
+                $notes = $body
+            }
         }
     }
 }
