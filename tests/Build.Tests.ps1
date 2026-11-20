@@ -221,7 +221,7 @@ Describe 'Publish tasks' {
 
     It 'refuses to publish when nothing was built' {
         $dir = Join-Path $script:work 'publish-nobuild'
-        $out = (& $script:pwsh -NoProfile -NonInteractive -c "Invoke-Build PublishBuilt -File '$($script:buildFile)' -BuildPath '$dir' -NugetApiKey not-a-real-key *>&1 | Out-String 2>&1" 2>&1) -join "`n"
+        $out = (& $script:pwsh -NoProfile -NonInteractive -c "Invoke-Build PublishBuilt -File '$($script:buildFile)' -BuildPath '$dir' -NugetApiKey not-a-real-key *>&1 | Out-String" 2>&1) -join "`n"
         $LASTEXITCODE | Should -Not -Be 0
         $out | Should -Match 'No built module'
         $out | Should -Not -Match 'not-a-real-key(?!\W*\*)' -Because 'the key must never be echoed'
