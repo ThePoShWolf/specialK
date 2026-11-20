@@ -5,7 +5,9 @@ param (
     # Where the built module goes. Defaults to ./build/<module>.
     [string]$BuildPath = (Join-Path $PSScriptRoot 'build'),
     # Pester tags to leave out of the Test task, e.g. -ExcludeTag KnownBug
-    [string[]]$ExcludeTag
+    [string[]]$ExcludeTag,
+    # Where the Test task writes its Pester result file (NUnit 2.5 XML). Nothing is written when omitted.
+    [string]$TestResultPath
 )
 $srcPath = Join-Path $PSScriptRoot 'src'
 $testPath = Join-Path $PSScriptRoot 'tests'
@@ -96,17 +98,52 @@ task ModuleBuild Clean, {
 }
 
 # Run the offline Pester suite (tests/). It needs no cluster, no network and no build; it loads src/ itself.
-#   Invoke-Build Test                      everything; the KnownBug tests currently fail on purpose
+# The Smoke tag (tests/smoke, real kubectl and cluster) is always excluded; see SmokeTest.
+#   Invoke-Build Test                      everything offline; the KnownBug tests currently fail on purpose
 #   Invoke-Build Test -ExcludeTag KnownBug only what is expected to pass today
+#   Invoke-Build Test -TestResultPath ./testResults/unit.xml   also write NUnit XML
 task Test {
     $config = New-PesterConfiguration
     $config.Run.Path = $testPath
     $config.Run.Throw = $true
     $config.Output.Verbosity = 'Normal'
-    if ($ExcludeTag) {
-        $config.Filter.ExcludeTag = $ExcludeTag
+    $config.Filter.ExcludeTag = @($ExcludeTag) + 'Smoke' | Where-Object { $_ } | Select-Object -Unique
+    if ($TestResultPath) {
+        $config.TestResult.Enabled = $true
+        $config.TestResult.OutputFormat = 'NUnitXml'
+        $config.TestResult.OutputPath = $TestResultPath
     }
     Invoke-Pester -Configuration $config
+}
+
+# Smoke test against a real cluster: runs only tests/smoke, importing the BUILT module (run ModuleBuild first, or use
+# Invoke-Build ModuleBuild, SmokeTest). Needs kubectl and a reachable cluster with metrics-server; the CI smoke job
+# sets that up with kind. The suite creates and removes its own namespace.
+#   Invoke-Build ModuleBuild, SmokeTest -TestResultPath ./testResults/smoke.xml
+task SmokeTest {
+    if (-not (Test-Path (Join-Path $modulePath "$moduleName.psd1"))) {
+        throw "No built module at '$modulePath'. Run 'Invoke-Build ModuleBuild' first."
+    }
+    $env:SPECIALK_SMOKE_MODULE = $modulePath
+    try {
+        $config = New-PesterConfiguration
+        $config.Run.Path = Join-Path $testPath 'smoke'
+        $config.Run.Throw = $true
+        $config.Output.Verbosity = 'Detailed'
+        $config.Filter.Tag = 'Smoke'
+        if ($ExcludeTag) {
+            $config.Filter.ExcludeTag = $ExcludeTag
+        }
+        if ($TestResultPath) {
+            $config.TestResult.Enabled = $true
+            $config.TestResult.OutputFormat = 'NUnitXml'
+            $config.TestResult.OutputPath = $TestResultPath
+        }
+        Invoke-Pester -Configuration $config
+    }
+    finally {
+        Remove-Item Env:\SPECIALK_SMOKE_MODULE -ErrorAction Ignore
+    }
 }
 
 # Publishes the built module. Does nothing unless -NugetApiKey is given. (Release flow is reworked in a later phase.)
