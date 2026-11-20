@@ -188,6 +188,46 @@ Describe 'k, offline' {
             $message | Should -Match 'exit code 4'
         }
 
+        It 'names only the verb and the first resource in the error: <Expected>' -ForEach @(
+            @{ Kargs = @('get', 'nosuchthing', '-n', 'demo'); Expected = 'kubectl get nosuchthing failed with exit code 1' }
+            @{ Kargs = @('version'); Expected = 'kubectl version failed with exit code 1' }
+            @{ Kargs = @('--context', 'x'); Expected = 'kubectl failed with exit code 1' }
+        ) {
+            Set-FakeKubectl -Arguments $Kargs -ExitCode 1
+            $previous = $global:ErrorActionPreference
+            try {
+                $global:ErrorActionPreference = 'SilentlyContinue'
+                $Error.Clear()
+                k @Kargs > $null
+                $record = $Error[0]
+            } finally {
+                $global:ErrorActionPreference = $previous
+            }
+            $record.Exception.Message | Should -BeExactly $Expected
+            $record.TargetObject | Should -BeExactly ($Expected -replace ' failed with exit code 1$')
+        }
+
+        It 'keeps credential arguments out of the error record: <Kargs>' -ForEach @(
+            @{ Kargs = @('get', 'nosuchthing', '--token=hunter2xyz') }
+            @{ Kargs = @('get', 'nosuchthing', '--token', 'hunter2xyz') }
+            @{ Kargs = @('create', 'secret', 'generic', 'db', '--from-literal=pw=hunter2xyz') }
+            @{ Kargs = @('--password=hunter2xyz', 'get', 'pod', 'web') }
+        ) {
+            Set-FakeKubectl -Arguments $Kargs -ExitCode 1
+            $previous = $global:ErrorActionPreference
+            try {
+                $global:ErrorActionPreference = 'SilentlyContinue'
+                $Error.Clear()
+                k @Kargs > $null
+                $record = $Error[0]
+            } finally {
+                $global:ErrorActionPreference = $previous
+            }
+            $record | Should -Not -BeNullOrEmpty
+            $everything = @($record.Exception.Message, "$($record.TargetObject)", "$record", ($record | Out-String)) -join "`n"
+            $everything | Should -Not -Match 'hunter2xyz'
+        }
+
         It 'a successful call writes no error' {
             $Error.Clear()
             k get pod > $null
