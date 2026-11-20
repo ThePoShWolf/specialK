@@ -37,6 +37,12 @@ class KubectlValue : System.IComparable, System.IConvertible {
         $span = [timespan]::Zero
         if ([double]::TryParse($text, [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$number)) {
             $this.Value = $number
+        } elseif ($text -match '^(?=\d)(?:(\d+)y)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$') {
+            # a kubectl-style duration, so AGE -lt '1h' reads the way kubectl prints ages
+            $seconds = 0.0
+            $unit = @((365 * 86400), 86400, 3600, 60, 1)
+            for ($i = 1; $i -le 5; $i++) { if ($Matches[$i]) { $seconds += [double]$Matches[$i] * $unit[$i - 1] } }
+            $this.Value = [timespan]::FromSeconds($seconds)
         } elseif ([timespan]::TryParse($text, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$span)) {
             $this.Value = $span
         }
@@ -49,6 +55,11 @@ class KubectlValue : System.IComparable, System.IConvertible {
     # Numbers compare as numbers, durations as durations. Anything else (no Value, or a number against a
     # duration) is ordered after, never an error: a bad comparison must not break a pipeline.
     [int] CompareTo([object]$other) {
+        # the same text is always equal, so existing filters like READY -eq '1/1' keep working
+        $theirText = if ($other -is [KubectlValue]) { $other.Text } else { "$other" }
+        if ([string]::Equals($this.Text, $theirText, [System.StringComparison]::OrdinalIgnoreCase)) { return 0 }
+        # a plain string is read the same way as on the right of -lt/-gt ('1h', '3')
+        if ($other -is [string]) { $other = [KubectlValue]::new([string]$other) }
         $theirs = if ($other -is [KubectlValue]) { $other.Value } else { $other }
         $mine = $this.Value
         if ($null -eq $mine -and $null -eq $theirs) { return 0 }

@@ -141,6 +141,19 @@ Describe 'KubectlValue in a pipeline' {
         ($rows | Sort-Object RESTARTS -Descending | Select-Object -First 1).RESTARTS.ToString() | Should -Be '100'
     }
 
+    It 'keeps text equality working for cells that compare by value' {
+        $rows = New-Rows READY @('1/1', '0/1', '2/2')
+        @($rows | Where-Object READY -eq '1/1').Count | Should -Be 1
+        @($rows | Where-Object READY -ne '1/1').Count | Should -Be 2
+        @(New-Rows RESTARTS @('3 (5m ago)') | Where-Object RESTARTS -eq '3 (5m ago)').Count | Should -Be 1
+    }
+
+    It 'reads a kubectl-style duration on the right of a comparison' {
+        $rows = New-Rows AGE @('45s', '59m', '2h', '3d13h')
+        @($rows | Where-Object AGE -lt '1h').Count | Should -Be 2
+        @($rows | Where-Object AGE -gt '1d').Count | Should -Be 1
+    }
+
     It 'filters restarts with -gt, -ge, -lt, -eq against numbers' {
         $rows = New-Rows RESTARTS @('10 (5m ago)', '9', '100', '0', '3')
         @($rows | Where-Object RESTARTS -gt 3).Count | Should -Be 3

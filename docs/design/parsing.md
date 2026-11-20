@@ -43,7 +43,7 @@ Facts and decisions for the parsing design note. Bullets only; turn them into pr
 - Column names are mapped globally, not per resource; a future resource that reuses a typed name for something else (`READY`, `DATA`, `CAPACITY`) would be mis-typed. Check when adding resources.
 - `Group-Object` groups by the cell's text, so `3` and `3 (5m ago)` are separate groups although `-eq` says they are equal.
 - `ConvertTo-Json` shows `{Value, Text}` per typed cell (and a full TimeSpan object); there is no hook to serialize the plain value. `Export-Csv` writes the text.
-- String right-hand sides: `-lt '1h'` does not parse kubectl durations; use a `[TimeSpan]`. `-gt '3'` works (numeric strings are read).
+- String right-hand sides: numbers (`-gt '3'`) and kubectl-style durations (`-lt '1h'`, `'3d13h'`) are read; identical text always compares equal, so `READY -eq '1/1'` works. Other strings compare by text only.
 - `k` only converts default tables and `-o wide`. `-o json/yaml`, `-w`, `--no-headers`, comma lists (`pods,svc`) and unknown verbs/resources go straight to kubectl untouched.
 - `--` is lost for simple functions (README). `k exec -- ...` style commands need `kubectl` directly.
 - After a failed `k`: a non-terminating error (`KubectlFailed`) is written and `$LASTEXITCODE` is the real exit code. `$?` stays true after a script function returns, whatever it wrote to the error stream, so `$?` is not a failure signal; with `$global:ErrorActionPreference = 'Stop'` the error throws.
