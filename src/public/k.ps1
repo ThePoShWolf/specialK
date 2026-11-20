@@ -20,7 +20,8 @@ function k {
         return
     }
 
-    $out = & kubectl @args
+    # @() keeps a one-line result an array, so $out[0] is a line and not its first character
+    $out = @(& kubectl @args)
     $exitCode = $LASTEXITCODE
     # kubectl's default tables start with one of these headers
     if ($exitCode -eq 0 -and $out -and ($out[0] -match '^(NAME( |$)|NAMESPACE |CURRENT |LAST SEEN )')) {
