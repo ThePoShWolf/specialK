@@ -31,6 +31,30 @@ BeforeDiscovery {
         @{ Command = 'get events -A';              Kargs = @('get', 'events', '-A');                      Type = 'get-events-ns' }
         @{ Command = 'get events -o wide';         Kargs = @('get', 'events', '-n', '{ns}', '-o', 'wide'); Type = 'get-events-wide' }
         @{ Command = 'get events -A -o wide';      Kargs = @('get', 'events', '-A', '-o', 'wide');        Type = 'get-events-ns-wide' }
+        @{ Command = 'get ingress';                 Kargs = @('get', 'ingress', '-n', '{ns}');         Type = 'get-ingress' }
+        @{ Command = 'get ingress -A'; Kargs = @('get', 'ingress', '-A'); Type = 'get-ingress-ns' }
+        @{ Command = 'get ingress -o wide'; Kargs = @('get', 'ingress', '-n', '{ns}', '-o', 'wide'); Type = 'get-ingress-wide' }
+        @{ Command = 'get ingress -A -o wide'; Kargs = @('get', 'ingress', '-A', '-o', 'wide'); Type = 'get-ingress-ns-wide' }
+        @{ Command = 'get configmap';               Kargs = @('get', 'configmap', '-n', '{ns}');        Type = 'get-configmap' }
+        @{ Command = 'get configmap -A'; Kargs = @('get', 'configmap', '-A'); Type = 'get-configmap-ns' }
+        @{ Command = 'get configmap -o wide'; Kargs = @('get', 'configmap', '-n', '{ns}', '-o', 'wide'); Type = 'get-configmap-wide' }
+        @{ Command = 'get configmap -A -o wide'; Kargs = @('get', 'configmap', '-A', '-o', 'wide'); Type = 'get-configmap-ns-wide' }
+        @{ Command = 'get secret';                  Kargs = @('get', 'secret', '-n', '{ns}');         Type = 'get-secret' }
+        @{ Command = 'get secret -A'; Kargs = @('get', 'secret', '-A'); Type = 'get-secret-ns' }
+        @{ Command = 'get secret -o wide'; Kargs = @('get', 'secret', '-n', '{ns}', '-o', 'wide'); Type = 'get-secret-wide' }
+        @{ Command = 'get secret -A -o wide'; Kargs = @('get', 'secret', '-A', '-o', 'wide'); Type = 'get-secret-ns-wide' }
+        @{ Command = 'get persistentvolumeclaim';   Kargs = @('get', 'persistentvolumeclaim', '-n', '{ns}');  Type = 'get-persistentvolumeclaim' }
+        @{ Command = 'get persistentvolumeclaim -A'; Kargs = @('get', 'persistentvolumeclaim', '-A'); Type = 'get-persistentvolumeclaim-ns' }
+        @{ Command = 'get persistentvolumeclaim -o wide'; Kargs = @('get', 'persistentvolumeclaim', '-n', '{ns}', '-o', 'wide'); Type = 'get-persistentvolumeclaim-wide' }
+        @{ Command = 'get persistentvolumeclaim -A -o wide'; Kargs = @('get', 'persistentvolumeclaim', '-A', '-o', 'wide'); Type = 'get-persistentvolumeclaim-ns-wide' }
+        @{ Command = 'get job';                     Kargs = @('get', 'job', '-n', '{ns}');           Type = 'get-job' }
+        @{ Command = 'get job -A'; Kargs = @('get', 'job', '-A'); Type = 'get-job-ns' }
+        @{ Command = 'get job -o wide'; Kargs = @('get', 'job', '-n', '{ns}', '-o', 'wide'); Type = 'get-job-wide' }
+        @{ Command = 'get job -A -o wide'; Kargs = @('get', 'job', '-A', '-o', 'wide'); Type = 'get-job-ns-wide' }
+        @{ Command = 'get statefulset';             Kargs = @('get', 'statefulset', '-n', '{ns}');       Type = 'get-statefulset' }
+        @{ Command = 'get statefulset -A'; Kargs = @('get', 'statefulset', '-A'); Type = 'get-statefulset-ns' }
+        @{ Command = 'get statefulset -o wide'; Kargs = @('get', 'statefulset', '-n', '{ns}', '-o', 'wide'); Type = 'get-statefulset-wide' }
+        @{ Command = 'get statefulset -A -o wide'; Kargs = @('get', 'statefulset', '-A', '-o', 'wide'); Type = 'get-statefulset-ns-wide' }
         @{ Command = 'get namespace';              Kargs = @('get', 'namespace');                         Type = 'get-namespace' }
         @{ Command = 'get namespace -o wide';      Kargs = @('get', 'namespace', '-o', 'wide');           Type = 'get-namespace-wide' }
         @{ Command = 'get node';                   Kargs = @('get', 'node');                              Type = 'get-node' }
@@ -52,6 +76,11 @@ BeforeDiscovery {
         @{ Command = 'get ns';      Kargs = @('get', 'ns');                          Type = 'get-namespace' }
         @{ Command = 'get no';      Kargs = @('get', 'no');                          Type = 'get-node' }
         @{ Command = 'get ev';      Kargs = @('get', 'ev', '-n', '{ns}');            Type = 'get-events' }
+        @{ Command = 'get ing';     Kargs = @('get', 'ing', '-n', '{ns}');           Type = 'get-ingress' }
+        @{ Command = 'get cm';      Kargs = @('get', 'cm', '-n', '{ns}');            Type = 'get-configmap' }
+        @{ Command = 'get pvc';     Kargs = @('get', 'pvc', '-n', '{ns}');           Type = 'get-persistentvolumeclaim' }
+        @{ Command = 'get sts';     Kargs = @('get', 'sts', '-n', '{ns}');           Type = 'get-statefulset' }
+        @{ Command = 'get jobs';    Kargs = @('get', 'jobs', '-n', '{ns}');          Type = 'get-job' }
         @{ Command = '-n <ns> get po';              Kargs = @('-n', '{ns}', 'get', 'po');                 Type = 'get-pod' }
         @{ Command = '--namespace=<ns> get pods';   Kargs = @('--namespace={ns}', 'get', 'pods');         Type = 'get-pod' }
         @{ Command = '-n <ns> get po -o wide';      Kargs = @('-n', '{ns}', 'get', 'po', '-o', 'wide');   Type = 'get-pod-wide' }
@@ -93,6 +122,31 @@ BeforeAll {
     if ($LASTEXITCODE -ne 0) { throw 'Could not create the sample deployment' }
     & kubectl expose deployment smoke-web -n $script:ns --port=80 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Could not create the sample service' }
+
+    # One of each of the other objectified resources. None of them needs a running pod.
+    & kubectl create configmap smoke-config -n $script:ns --from-literal=key=value | Out-Null
+    & kubectl create secret generic smoke-secret -n $script:ns --from-literal=placeholder=not-a-real-secret | Out-Null
+    & kubectl create ingress smoke-ing -n $script:ns --rule='smoke.example.test/*=smoke-web:80' | Out-Null
+    & kubectl create job smoke-job -n $script:ns --image=registry.k8s.io/pause:3.10 | Out-Null
+    $extraObjects = @'
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: smoke-claim}
+spec: {accessModes: [ReadWriteOnce], resources: {requests: {storage: 64Mi}}}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: {name: smoke-sts}
+spec:
+  serviceName: smoke-sts
+  replicas: 1
+  selector: {matchLabels: {app: smoke-sts}}
+  template:
+    metadata: {labels: {app: smoke-sts}}
+    spec: {containers: [{name: pause, image: registry.k8s.io/pause:3.10}]}
+'@
+    $extraObjects | & kubectl apply -n $script:ns -f - | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Could not create the sample claim and statefulset' }
 
     # Wait (bounded) for the workload and for pod metrics. These do not throw: the tests that depend on them say so.
     $readyTimeout = Get-EnvSeconds 'SPECIALK_SMOKE_READY_TIMEOUT' 180
@@ -151,6 +205,22 @@ Describe 'k against a real cluster' -Tag 'Smoke' {
             }
         }
 
+        It 'typed columns sort and filter on real output' {
+            $pods = @(k get pod -n $script:ns)
+            $pods | ForEach-Object {
+                $_.RESTARTS.GetType().Name | Should -Be 'KubectlValue'
+                $_.AGE.Value | Should -BeOfType [timespan]
+                $_.READY.ToString() | Should -Match '^\d+/\d+$'
+            }
+            { $pods | Sort-Object RESTARTS, AGE } | Should -Not -Throw
+            @($pods | Where-Object AGE -lt (New-TimeSpan -Days 1)).Count | Should -Be $pods.Count
+            @($pods | Where-Object RESTARTS -gt 1000).Count | Should -Be 0
+            (k get statefulset -n $script:ns).READY.Value | Should -BeLessOrEqual 1
+            (k get job -n $script:ns).COMPLETIONS.ToString() | Should -Be '0/1'
+            (k get configmap -n $script:ns | Where-Object NAME -eq 'smoke-config').DATA.Value | Should -Be 1
+            (k get secret -n $script:ns | Where-Object NAME -eq 'smoke-secret').TYPE | Should -Be 'Opaque'
+        }
+
         It 'finds the sample objects by name' {
             (k get deployment -n $script:ns).NAME | Should -Contain 'smoke-web'
             (k get service -n $script:ns).NAME | Should -Contain 'smoke-web'
@@ -183,8 +253,8 @@ Describe 'k against a real cluster' -Tag 'Smoke' {
     }
 
     Context 'pass-through' {
-        It 'unsupported get (configmap) returns kubectl''s raw text lines' {
-            $result = @(k get configmap -n kube-system)
+        It 'unsupported get (replicaset) returns kubectl''s raw text lines' {
+            $result = @(k get replicaset -n kube-system)
             $result.Count | Should -BeGreaterThan 1
             $result | ForEach-Object { $_ | Should -BeOfType [string] }
             $result[0] | Should -Match '^NAME\s'
